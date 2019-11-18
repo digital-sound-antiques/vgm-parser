@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "description": "VGM file parser",
   "main": "dist/index.js",
+  "files": [
+    "README.md",
+    "package.json",
+    "dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -10,6 +15,10 @@
   },
   "author": "Mitsutaka Okazaki",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digital-sound-antiques/vgm-parser.git"
+  },
   "devDependencies": {
     "prettier": "^1.19.1",
     "ts-node": "^8.4.1",
