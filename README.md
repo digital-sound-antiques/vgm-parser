@@ -1,4 +1,5 @@
 # vgm-parser
+[![npm version](https://badge.fury.io/js/vgm-parser.svg)](https://badge.fury.io/js/vgm-parser)
 
 VGM parser module for JavaScript.
 
