@@ -1,0 +1,22 @@
+{
+  "name": "vgm-parser",
+  "version": "0.1.0",
+  "description": "VGM file parser",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "typedoc": "typedoc"
+  },
+  "author": "Mitsutaka Okazaki",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^1.19.1",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.20.1",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typedoc": "^0.15.2",
+    "typescript": "^3.4.5"
+  }
+}
