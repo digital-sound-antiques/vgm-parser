@@ -9,7 +9,7 @@ $ npm install --save vgm-parser
 
 # Usage
 ## Basic Usage
-```
+```javascript
 const { VGM } = require("vgm-parser");
 
 const arrayBuffer = /* load raw VGM binary to ArrayBuffer */
@@ -20,7 +20,7 @@ console.log(vgm.gd3tag.trackTitle);
 ```
 
 ## Node
-```
+```javascript
 const { VGM } = require("vgm-parser");
 
 function toArrayBuffer(b) {
@@ -37,7 +37,7 @@ console.log(vgm.gd3tag.trackTitle);
 ```
 
 ## Node - VGZ file support
-```
+```javascript
 const zlib = require("zlib");
 const { VGM } = require("vgm-parser");
 
