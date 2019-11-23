@@ -3,6 +3,7 @@
  * @internal
  */
 import { VGMObject, ChipsObject, GD3TagObject, createEmptyGD3TagObject, ChipName } from "./vgm_object";
+import { TextDecoder } from "util";
 
 /** @hidden */
 function getParamsCommon(d: DataView, clockIndex: number) {

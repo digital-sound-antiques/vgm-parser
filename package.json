@@ -1,6 +1,6 @@
 {
   "name": "vgm-parser",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "VGM file parser",
   "main": "dist/index.js",
   "files": [
@@ -10,6 +10,7 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build",
     "build": "tsc",
     "typedoc": "typedoc"
   },
@@ -20,6 +21,7 @@
     "url": "https://github.com/digital-sound-antiques/vgm-parser.git"
   },
   "devDependencies": {
+    "@types/node": "^12.12.12",
     "prettier": "^1.19.1",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.1",
