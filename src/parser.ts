@@ -91,7 +91,7 @@ function getParamsYm2608(d: DataView) {
 
 /** @hidden */
 function getParamsYm2610(d: DataView) {
-  const obj = getParamsCommon(d, 0x48);
+  const obj = getParamsCommon(d, 0x4c);
   if (obj) {
     const t = d.getUint8(0x4c);
     return {
