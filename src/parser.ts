@@ -9,7 +9,7 @@ import { TextDecoder } from "util";
 function getParamsCommon(d: DataView, clockIndex: number) {
   const clock = d.getUint32(clockIndex, true);
   if (clock) {
-    return { clock };
+    return { clock: clock & 0x3fffffff, dual: clock & 0x40000000 ? true : false };
   }
   return undefined;
 }
@@ -18,7 +18,7 @@ function getParamsCommon(d: DataView, clockIndex: number) {
 function getParamsCommonWithFlags(d: DataView, clockIndex: number, flagsIndex: number) {
   const clock = d.getUint32(clockIndex, true);
   if (clock) {
-    return { clock, flags: d.getUint8(flagsIndex) };
+    return { clock: clock & 0x3fffffff, dual: clock & 0x40000000 ? true : false, flags: d.getUint8(flagsIndex) };
   }
   return undefined;
 }

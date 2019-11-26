@@ -46,57 +46,60 @@ export type ChipTypeObject = {
   name: string;
 };
 
+export type ChipClockObject = {
+  clock: number;
+  dual: boolean;
+};
+
 export type ChipsObject = {
-  sn76489?: {
-    clock: number;
+  sn76489?: ChipClockObject & {
     feedback: number;
     shiftRegisterWidth: number;
     flags: number;
   };
-  ym2413?: { clock: number };
-  ym2612?: { clock: number; chipType: ChipTypeObject };
-  ym2151?: { clock: number; chipType: ChipTypeObject };
-  segaPcm?: { clock: number; interfaceRegister: number };
-  rf5c68?: { clock: number };
-  ym2203?: { clock: number; ssgFlags: number };
-  ym2608?: { clock: number; ssgFlags: number };
-  ym2610?: { clock: number; chipType: ChipTypeObject };
-  ym3812?: { clock: number };
-  ym3526?: { clock: number };
-  y8950?: { clock: number };
-  ymf262?: { clock: number };
-  ymf278b?: { clock: number };
-  ymf271?: { clock: number };
-  ymz280b?: { clock: number };
-  rf5c164?: { clock: number };
-  pwm?: { clock: number };
-  ay8910?: {
-    clock: number;
+  ym2413?: ChipClockObject;
+  ym2612?: ChipClockObject & { chipType: ChipTypeObject };
+  ym2151?: ChipClockObject & { chipType: ChipTypeObject };
+  segaPcm?: ChipClockObject & { interfaceRegister: number };
+  rf5c68?: ChipClockObject;
+  ym2203?: ChipClockObject & { ssgFlags: number };
+  ym2608?: ChipClockObject & { ssgFlags: number };
+  ym2610?: ChipClockObject & { chipType: ChipTypeObject };
+  ym3812?: ChipClockObject;
+  ym3526?: ChipClockObject;
+  y8950?: ChipClockObject;
+  ymf262?: ChipClockObject;
+  ymf278b?: ChipClockObject;
+  ymf271?: ChipClockObject;
+  ymz280b?: ChipClockObject;
+  rf5c164?: ChipClockObject;
+  pwm?: ChipClockObject;
+  ay8910?: ChipClockObject & {
     chipType: ChipTypeObject;
     flags: number;
   };
-  gameBoyDmg?: { clock: number };
-  nesApu?: { clock: number };
-  multiPcm?: { clock: number };
-  upd7759?: { clock: number };
-  okim6258?: { clock: number; flags: number };
-  okim6295?: { clock: number };
-  k051649?: { clock: number };
-  k054539?: { clock: number; flags: number };
-  huc6280?: { clock: number };
-  c140?: { clock: number; chipType: ChipTypeObject };
-  k053260?: { clock: number };
-  pokey?: { clock: number };
-  qsound?: { clock: number };
-  scsp?: { clock: number };
-  wonderSwan?: { clock: number };
-  vsu?: { clock: number };
-  saa1099?: { clock: number };
-  es5503?: { clock: number; numberOfChannels: number };
-  es5505?: { clock: number; chipType: ChipTypeObject; numberOfChannels: number };
-  x1_010?: { clock: number };
-  c352?: { clock: number; clockDivider: number };
-  ga20?: { clock: number };
+  gameBoyDmg?: ChipClockObject;
+  nesApu?: ChipClockObject;
+  multiPcm?: ChipClockObject;
+  upd7759?: ChipClockObject;
+  okim6258?: ChipClockObject & { flags: number };
+  okim6295?: ChipClockObject;
+  k051649?: ChipClockObject;
+  k054539?: ChipClockObject & { flags: number };
+  huc6280?: ChipClockObject;
+  c140?: ChipClockObject & { chipType: ChipTypeObject };
+  k053260?: ChipClockObject;
+  pokey?: ChipClockObject;
+  qsound?: ChipClockObject;
+  scsp?: ChipClockObject;
+  wonderSwan?: ChipClockObject;
+  vsu?: ChipClockObject;
+  saa1099?: ChipClockObject;
+  es5503?: ChipClockObject & { numberOfChannels: number };
+  es5505?: ChipClockObject & { chipType: ChipTypeObject; numberOfChannels: number };
+  x1_010?: ChipClockObject;
+  c352?: ChipClockObject & { clockDivider: number };
+  ga20?: ChipClockObject;
 };
 
 export function deepCloneChipsObject(chips: ChipsObject) {

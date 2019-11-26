@@ -1,6 +1,6 @@
 {
   "name": "vgm-parser",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "VGM file parser",
   "main": "dist/index.js",
   "files": [
