@@ -136,7 +136,7 @@ function getParamsEs5503(d: DataView) {
 }
 
 /** @hidden */
-function getParamsEs5505(d: DataView) {
+function getParamsEs5506(d: DataView) {
   const obj = getParamsCommon(d, 0xd0);
   if (obj) {
     const t = obj.clock >> 30;
@@ -397,7 +397,7 @@ export function parseVGM(data: ArrayBuffer): VGMObject {
     chips.wonderSwan = getParamsCommon(d, 0xc0);
     chips.vsu = getParamsCommon(d, 0xc4);
     chips.saa1099 = getParamsCommon(d, 0xc8);
-    chips.es5505 = getParamsEs5505(d);
+    chips.es5506 = getParamsEs5506(d);
     chips.es5503 = getParamsEs5503(d);
     chips.x1_010 = getParamsCommon(d, 0xd8);
     chips.c352 = getParamsC352(d);

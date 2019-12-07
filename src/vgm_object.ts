@@ -1,5 +1,6 @@
 export type ChipName =
   | "sn76489"
+  | "gameGearStereo"
   | "ym2413"
   | "ym2612"
   | "ym2151"
@@ -36,7 +37,7 @@ export type ChipName =
   | "vsu"
   | "saa1099"
   | "es5503"
-  | "es5505"
+  | "es5506"
   | "x1_010"
   | "c352"
   | "ga20";
@@ -57,6 +58,7 @@ export type ChipsObject = {
     shiftRegisterWidth: number;
     flags: number;
   };
+  gameGearStereo?: null /* dummy */;
   ym2413?: ChipClockObject;
   ym2612?: ChipClockObject & { chipType: ChipTypeObject };
   ym2151?: ChipClockObject & { chipType: ChipTypeObject };
@@ -96,7 +98,7 @@ export type ChipsObject = {
   vsu?: ChipClockObject;
   saa1099?: ChipClockObject;
   es5503?: ChipClockObject & { numberOfChannels: number };
-  es5505?: ChipClockObject & { chipType: ChipTypeObject; numberOfChannels: number };
+  es5506?: ChipClockObject & { chipType: ChipTypeObject; numberOfChannels: number };
   x1_010?: ChipClockObject;
   c352?: ChipClockObject & { clockDivider: number };
   ga20?: ChipClockObject;
