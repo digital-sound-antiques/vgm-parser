@@ -5,6 +5,7 @@ export type VGMCommandObject = {
   size: number;
   chip?: ChipName;
   index?: number;
+  type?: number;
   port?: number | null;
   addr?: number | null;
   data?: number;
@@ -14,10 +15,18 @@ export type VGMCommandObject = {
   readOffset?: number;
   writeOffset?: number;
   writeSize?: number;
+  count?: number;
   streamId?: number;
   offset?: number;
-  count?: number;
   channel?: number;
+  dataBankId?: number;
+  stepBase?: number;
+  stepSize?: number;
+  frequency?: number;
+  lengthMode?: number;
+  dataLength?: number;
+  blockId?: number;
+  flags?: number;
 };
 
 export function commandToChipName(cmd: number): ChipName {
@@ -624,6 +633,330 @@ export class VGMWriteDataCommand extends VGMCommand {
   }
 }
 
+export class VGMSetupStreamCommand extends VGMCommand {
+  type: number;
+  streamId: number;
+  port: number;
+  channel: number;
+  constructor(arg: { cmd: number; streamId: number; type: number; port: number; channel: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+    this.type = arg.type;
+    this.port = arg.port;
+    this.channel = arg.channel;
+  }
+  get size(): number {
+    return 5;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x90;
+    res[1] = this.streamId;
+    res[2] = this.type;
+    res[3] = this.port;
+    res[4] = this.channel;
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMSetupStreamCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x90) {
+      return new VGMSetupStreamCommand({
+        cmd: 0x90,
+        streamId: buf[offset + 1],
+        type: buf[offset + 2],
+        port: buf[offset + 3],
+        channel: buf[offset + 4]
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId,
+      type: this.type,
+      port: this.port,
+      channel: this.channel
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMSetupStreamCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x90) {
+      if (obj.streamId == null || obj.type == null || obj.port == null || obj.channel == null) {
+        throw new Error(`Can't create VGMSetupStreamCommand: required parameter is missing.`);
+      }
+      return new VGMSetupStreamCommand(obj as any);
+    }
+    return null;
+  }
+}
+
+export class VGMSetStreamDataCommand extends VGMCommand {
+  streamId: number;
+  dataBankId: number;
+  stepSize: number;
+  stepBase: number;
+  constructor(arg: { cmd: number; streamId: number; dataBankId: number; stepSize: number; stepBase: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+    this.dataBankId = arg.dataBankId;
+    this.stepSize = arg.stepSize;
+    this.stepBase = arg.stepBase;
+  }
+  get size(): number {
+    return 5;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x91;
+    res[1] = this.streamId;
+    res[2] = this.dataBankId;
+    res[3] = this.stepSize;
+    res[4] = this.stepBase;
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMSetStreamDataCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x91) {
+      return new VGMSetStreamDataCommand({
+        cmd,
+        streamId: buf[offset + 1],
+        dataBankId: buf[offset + 2],
+        stepSize: buf[offset + 3],
+        stepBase: buf[offset + 4]
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId,
+      dataBankId: this.dataBankId,
+      stepBase: this.stepBase,
+      stepSize: this.stepSize
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMSetStreamDataCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x91) {
+      if (obj.streamId == null || obj.dataBankId == null || obj.stepBase == null || obj.stepSize == null) {
+        throw new Error(`Can't create VGMSetStreamDataCommand: required parameter is missing.`);
+      }
+      return new VGMSetStreamDataCommand(obj as any);
+    }
+    return null;
+  }
+}
+
+export class VGMSetStreamFrequencyCommand extends VGMCommand {
+  streamId: number;
+  frequency: number;
+  constructor(arg: { cmd: number; streamId: number; frequency: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+    this.frequency = arg.frequency;
+  }
+  get size(): number {
+    return 6;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x92;
+    res[1] = this.streamId;
+    setUint32LE(res, 2, this.frequency);
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMSetStreamFrequencyCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x92) {
+      return new VGMSetStreamFrequencyCommand({
+        cmd,
+        streamId: buf[offset + 1],
+        frequency: getUint32LE(buf, offset + 2)
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId,
+      frequency: this.frequency
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMSetStreamFrequencyCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x92) {
+      if (obj.streamId == null || obj.frequency == null) {
+        throw new Error(`Can't create VGMSetStreamFrequencyCommand: required parameter is missing.`);
+      }
+      return new VGMSetStreamFrequencyCommand(obj as any);
+    }
+    return null;
+  }
+}
+
+export class VGMStartStreamCommand extends VGMCommand {
+  streamId: number;
+  offset: number;
+  lengthMode: number;
+  dataLength: number;
+  constructor(arg: { cmd: number; streamId: number; offset: number; lengthMode: number; dataLength: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+    this.offset = arg.offset;
+    this.lengthMode = arg.lengthMode;
+    this.dataLength = arg.dataLength;
+  }
+  get size(): number {
+    return 11;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x93;
+    res[1] = this.streamId;
+    setUint32LE(res, 2, this.offset);
+    res[6] = this.lengthMode;
+    setUint32LE(res, 7, this.dataLength);
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMStartStreamCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x93) {
+      return new VGMStartStreamCommand({
+        cmd,
+        streamId: buf[offset + 1],
+        offset: getUint32LE(buf, offset + 2),
+        lengthMode: buf[offset + 6],
+        dataLength: getUint32LE(buf, offset + 7)
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId,
+      offset: this.offset,
+      lengthMode: this.lengthMode,
+      dataLength: this.dataLength
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMStartStreamCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x91) {
+      if (obj.streamId == null || obj.offset == null || obj.lengthMode == null || obj.dataLength == null) {
+        throw new Error(`Can't create VGMStartStreamCommand: required parameter is missing.`);
+      }
+      return new VGMStartStreamCommand(obj as any);
+    }
+    return null;
+  }
+}
+
+export class VGMStopStreamCommand extends VGMCommand {
+  streamId: number;
+  constructor(arg: { cmd: number; streamId: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+  }
+  get size(): number {
+    return 2;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x94;
+    res[1] = this.streamId;
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMStopStreamCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x94) {
+      return new VGMStopStreamCommand({
+        cmd,
+        streamId: buf[offset + 1]
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMStopStreamCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x91) {
+      if (obj.streamId == null) {
+        throw new Error(`Can't create VGMStopStreamCommand: required parameter is missing.`);
+      }
+      return new VGMStopStreamCommand(obj as any);
+    }
+    return null;
+  }
+}
+
+export class VGMStartStreamFastCommand extends VGMCommand {
+  streamId: number;
+  blockId: number;
+  flags: number;
+  constructor(arg: { cmd: number; streamId: number; blockId: number; flags: number }) {
+    super(arg.cmd);
+    this.streamId = arg.streamId;
+    this.blockId = arg.blockId;
+    this.flags = arg.flags;
+  }
+  get size(): number {
+    return 5;
+  }
+  toUint8Array(): Uint8Array {
+    const res = new Uint8Array(this.size);
+    res[0] = 0x93;
+    res[1] = this.streamId;
+    setUint16LE(res, 2, this.blockId);
+    res[4] = this.flags;
+    return res;
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMStartStreamFastCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x95) {
+      return new VGMStartStreamFastCommand({
+        cmd,
+        streamId: buf[offset + 1],
+        blockId: getUint16LE(buf, offset + 2),
+        flags: buf[offset + 4]
+      });
+    }
+    return null;
+  }
+  toObject(): VGMCommandObject {
+    return {
+      cmd: this.cmd,
+      size: this.size,
+      streamId: this.streamId,
+      blockId: this.blockId,
+      flags: this.flags
+    };
+  }
+  static fromObject(obj: VGMCommandObject): VGMStartStreamFastCommand | null {
+    const cmd = obj.cmd;
+    if (cmd === 0x95) {
+      if (obj.streamId == null || obj.blockId == null || obj.flags == null) {
+        throw new Error(`Can't create VGMStartStreamFastCommand: required parameter is missing.`);
+      }
+      return new VGMStartStreamFastCommand(obj as any);
+    }
+    return null;
+  }
+}
+
 export class VGMSeekPCMCommand extends VGMCommand {
   offset: number;
   constructor(arg: { offset: number }) {
@@ -673,6 +1006,12 @@ export function parseVGMCommand(buf: ArrayLike<number>, offset: number): VGMComm
     VGMSeekPCMCommand.parse(buf, offset) ||
     VGMDataBlockCommand.parse(buf, offset) ||
     VGMPCMRAMWriteCommand.parse(buf, offset) ||
+    VGMSetupStreamCommand.parse(buf, offset) ||
+    VGMSetStreamDataCommand.parse(buf, offset) ||
+    VGMSetStreamFrequencyCommand.parse(buf, offset) ||
+    VGMStartStreamCommand.parse(buf, offset) ||
+    VGMStopStreamCommand.parse(buf, offset) ||
+    VGMStartStreamFastCommand.parse(buf, offset) ||
     VGMEndCommand.parse(buf, offset);
   if (result) {
     return result;
@@ -688,6 +1027,12 @@ export function fromVGMCommandObject(obj: VGMCommandObject): VGMCommand {
     VGMSeekPCMCommand.fromObject(obj) ||
     VGMDataBlockCommand.fromObject(obj) ||
     VGMPCMRAMWriteCommand.fromObject(obj) ||
+    VGMSetupStreamCommand.fromObject(obj) ||
+    VGMSetStreamDataCommand.fromObject(obj) ||
+    VGMSetStreamFrequencyCommand.fromObject(obj) ||
+    VGMStartStreamCommand.fromObject(obj) ||
+    VGMStopStreamCommand.fromObject(obj) ||
+    VGMStartStreamFastCommand.fromObject(obj) ||
     VGMEndCommand.fromObject(obj);
   if (result) {
     return result;
