@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run clean && npm run build",
+    "clean": "rm-cli -ss -r dist",
     "build": "tsc",
     "typedoc": "typedoc"
   },
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^12.12.12",
     "prettier": "^1.19.1",
+    "rm-cli": "^1.4.2",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",
