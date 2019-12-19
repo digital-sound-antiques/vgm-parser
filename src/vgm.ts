@@ -16,7 +16,7 @@ import { parseVGM } from "./parser";
 export class VGM implements VGMObject {
   private _obj: VGMObject;
 
-  get version() {
+  get version(): VersionObject {
     return this._obj.version;
   }
   set version(value: VersionObject) {
@@ -34,10 +34,10 @@ export class VGM implements VGMObject {
   set samples(value: SamplesObject) {
     this._obj.samples = { ...value };
   }
-  get rate() {
+  get rate(): number {
     return this._obj.rate;
   }
-  set rate(value) {
+  set rate(value: number) {
     this._obj.rate = value;
   }
   get chips(): ChipsObject {
@@ -46,28 +46,28 @@ export class VGM implements VGMObject {
   set chips(value: ChipsObject) {
     this._obj.chips = deepCloneChipsObject(value);
   }
-  get loopModifier() {
+  get loopModifier(): number {
     return this._obj.loopModifier;
   }
-  set loopModifier(value) {
+  set loopModifier(value: number) {
     this._obj.loopModifier = value;
   }
-  get loopBase() {
+  get loopBase(): number {
     return this._obj.loopBase;
   }
-  set loopBase(value) {
+  set loopBase(value: number) {
     this._obj.loopBase = value;
   }
-  get volumeModifier() {
+  get volumeModifier(): number {
     return this._obj.volumeModifier;
   }
-  set volumeModifier(value) {
+  set volumeModifier(value: number) {
     this._obj.volumeModifier = value;
   }
-  get data() {
+  get data(): ArrayBuffer {
     return this._obj.data;
   }
-  set data(value) {
+  set data(value: ArrayBuffer) {
     this._obj.data = value.slice(0);
   }
   get usedChips(): ChipName[] {
@@ -97,7 +97,7 @@ export class VGM implements VGMObject {
   }
 
   /** deep clone this instance. */
-  clone() {
+  clone(): VGM {
     return new VGM(deepCloneVGMObject(this._obj));
   }
 
@@ -115,7 +115,7 @@ export class VGM implements VGMObject {
  * @param samples number of samples
  * @param sampleRate base sample rate
  */
-export function formatMinSec(samples: number, sampleRate: number = 44100) {
+export function formatMinSec(samples: number, sampleRate: number = 44100): string {
   let millis = Math.round((samples / sampleRate) * 1000);
   const minutes = Math.floor(millis / 60000);
   const seconds = Math.floor((millis - minutes * 60000) / 1000);

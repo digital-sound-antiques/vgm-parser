@@ -2,7 +2,7 @@
  * @hidden
  * @internal
  */
-import { VGMObject, ChipsObject, GD3TagObject, createEmptyGD3TagObject, ChipName } from "./vgm_object";
+import { VGMObject, VersionObject, ChipsObject, GD3TagObject, createEmptyGD3TagObject, ChipName } from "./vgm_object";
 import { TextDecoder } from "util";
 
 /** @hidden */
@@ -245,7 +245,7 @@ function extractUsedChips(chips: ChipsObject): ChipName[] {
 }
 
 /** @hidden */
-function toVersionObject(code: number) {
+function toVersionObject(code: number): VersionObject {
   const result = {
     code,
     major: (code >> 8).toString(16),
@@ -255,7 +255,7 @@ function toVersionObject(code: number) {
 }
 
 /** @hidden */
-function parseNullTerminatedTextBlock(d: DataView, offset: number) {
+function parseNullTerminatedTextBlock(d: DataView, offset: number): string[] {
   let index = offset;
   let pos = offset;
   const result = [];
