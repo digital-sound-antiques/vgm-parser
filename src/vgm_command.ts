@@ -633,14 +633,20 @@ export class VGMWriteDataCommand extends VGMCommand {
   }
 }
 
-export class VGMSetupStreamCommand extends VGMCommand {
-  type: number;
+export abstract class VGMStreamCommand extends VGMCommand {
   streamId: number;
+  constructor(cmd: number, streamId: number) {
+    super(cmd);
+    this.streamId = streamId;
+  }
+}
+
+export class VGMSetupStreamCommand extends VGMStreamCommand {
+  type: number;
   port: number;
   channel: number;
   constructor(arg: { cmd: number; streamId: number; type: number; port: number; channel: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
     this.type = arg.type;
     this.port = arg.port;
     this.channel = arg.channel;
@@ -692,14 +698,12 @@ export class VGMSetupStreamCommand extends VGMCommand {
   }
 }
 
-export class VGMSetStreamDataCommand extends VGMCommand {
-  streamId: number;
+export class VGMSetStreamDataCommand extends VGMStreamCommand {
   dataBankId: number;
   stepSize: number;
   stepBase: number;
   constructor(arg: { cmd: number; streamId: number; dataBankId: number; stepSize: number; stepBase: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
     this.dataBankId = arg.dataBankId;
     this.stepSize = arg.stepSize;
     this.stepBase = arg.stepBase;
@@ -751,12 +755,10 @@ export class VGMSetStreamDataCommand extends VGMCommand {
   }
 }
 
-export class VGMSetStreamFrequencyCommand extends VGMCommand {
-  streamId: number;
+export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
   frequency: number;
   constructor(arg: { cmd: number; streamId: number; frequency: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
     this.frequency = arg.frequency;
   }
   get size(): number {
@@ -800,14 +802,12 @@ export class VGMSetStreamFrequencyCommand extends VGMCommand {
   }
 }
 
-export class VGMStartStreamCommand extends VGMCommand {
-  streamId: number;
+export class VGMStartStreamCommand extends VGMStreamCommand {
   offset: number;
   lengthMode: number;
   dataLength: number;
   constructor(arg: { cmd: number; streamId: number; offset: number; lengthMode: number; dataLength: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
     this.offset = arg.offset;
     this.lengthMode = arg.lengthMode;
     this.dataLength = arg.dataLength;
@@ -859,11 +859,9 @@ export class VGMStartStreamCommand extends VGMCommand {
   }
 }
 
-export class VGMStopStreamCommand extends VGMCommand {
-  streamId: number;
+export class VGMStopStreamCommand extends VGMStreamCommand {
   constructor(arg: { cmd: number; streamId: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
   }
   get size(): number {
     return 2;
@@ -903,13 +901,11 @@ export class VGMStopStreamCommand extends VGMCommand {
   }
 }
 
-export class VGMStartStreamFastCommand extends VGMCommand {
-  streamId: number;
+export class VGMStartStreamFastCommand extends VGMStreamCommand {
   blockId: number;
   flags: number;
   constructor(arg: { cmd: number; streamId: number; blockId: number; flags: number }) {
-    super(arg.cmd);
-    this.streamId = arg.streamId;
+    super(arg.cmd, arg.streamId);
     this.blockId = arg.blockId;
     this.flags = arg.flags;
   }

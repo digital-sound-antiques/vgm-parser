@@ -12,7 +12,6 @@ import {
   createEmptyVGMObject
 } from "./vgm_object";
 import { parseVGM } from "./parser";
-import { parseVGMCommand, VGMEndCommand } from "./vgm_command";
 
 export class VGM implements VGMObject {
   private _obj: VGMObject;
