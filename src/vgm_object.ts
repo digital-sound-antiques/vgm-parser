@@ -40,7 +40,8 @@ export type ChipName =
   | "es5506"
   | "x1_010"
   | "c352"
-  | "ga20";
+  | "ga20"
+  | "unknown";
 
 export type ChipTypeObject = {
   value: number;
@@ -103,6 +104,7 @@ export type ChipsObject = {
   x1_010?: ChipClockObject;
   c352?: ChipClockObject & { clockDivider?: number };
   ga20?: ChipClockObject;
+  unknown?: null; // dummy
 };
 
 export function deepCloneChipsObject(chips: ChipsObject) {

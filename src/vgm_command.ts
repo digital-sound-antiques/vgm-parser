@@ -30,6 +30,87 @@ export type VGMCommandObject = {
   flags?: number;
 };
 
+export function blockTypeToChipName(blockType: number): ChipName {
+  switch (blockType) {
+    case 0x00:
+    case 0x40:
+      return "ym2612";
+    case 0x01:
+    case 0x41:
+      return "rf5c68";
+    case 0x02:
+    case 0x42:
+      return "rf5c164";
+    case 0x03:
+    case 0x43:
+      return "pwm";
+    case 0x04:
+    case 0x44:
+      return "okim6258";
+    case 0x05:
+    case 0x45:
+      return "huc6280";
+    case 0x06:
+    case 0x46:
+      return "scsp";
+    case 0x07:
+    case 0x47:
+      return "nesApu";
+    case 0x80:
+      return "segaPcm";
+    case 0x81:
+      return "ym2608";
+    case 0x82:
+      return "ym2610";
+    case 0x83:
+      return "ym2610";
+    case 0x84:
+      return "ymf278b";
+    case 0x85:
+      return "ymf271";
+    case 0x86:
+      return "ymz280b";
+    case 0x87:
+      return "ymf278b";
+    case 0x88:
+      return "y8950";
+    case 0x89:
+      return "multiPcm";
+    case 0x8a:
+      return "upd7759";
+    case 0x8b:
+      return "okim6295";
+    case 0x8c:
+      return "k054539";
+    case 0x8d:
+      return "c140";
+    case 0x8e:
+      return "k053260";
+    case 0x8f:
+      return "qsound";
+    case 0x90:
+      return "es5506";
+    case 0x91:
+      return "x1_010";
+    case 0x92:
+      return "c352";
+    case 0x93:
+      return "ga20";
+    case 0xc0:
+      return "rf5c68";
+    case 0xc1:
+      return "rf5c164";
+    case 0xc2:
+      return "nesApu";
+    case 0xe0:
+      return "scsp";
+    case 0xe1:
+      return "es5503";
+    default:
+      return "unknown";
+  }
+}
+
 export function commandToChipName(cmd: number): ChipName {
   switch (cmd) {
     case 0x30:
@@ -220,6 +301,10 @@ export class VGMDataBlockCommand extends VGMCommand {
     });
   }
 
+  get chip(): ChipName {
+    return blockTypeToChipName(this.blockType);
+  }
+
   get size(): number {
     return 7 + this.blockData.length;
   }
@@ -252,6 +337,7 @@ export class VGMDataBlockCommand extends VGMCommand {
   toObject(): VGMCommandObject {
     return {
       cmd: this.cmd,
+      chip: this.chip,
       size: this.size,
       blockType: this.blockType,
       blockSize: this.blockSize,

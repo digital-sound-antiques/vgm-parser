@@ -51,12 +51,12 @@ test("VGMWaitCommand 63H", () => {
 });
 
 test("VGMDataBlockCommand", () => {
-  const obj = { blockType: 0x20, blockSize: 0x5, blockData: new Uint8Array([1, 2, 3, 4, 5]) };
+  const obj = { blockType: 0x04, blockSize: 0x5, blockData: new Uint8Array([1, 2, 3, 4, 5]) };
   const cmd = new VGMDataBlockCommand(obj);
   expect(cmd.cmd).toBe(0x67);
   expect(cmd.size).toBe(12);
-  expect(cmd.toObject()).toEqual({ cmd: 0x67, size: 12, ...obj });
-  expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x67, 0x66, 0x20, 0x05, 0x00, 0x00, 0x00, 1, 2, 3, 4, 5]));
+  expect(cmd.toObject()).toEqual({ cmd: 0x67, chip: "okim6258", size: 12, ...obj });
+  expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x67, 0x66, 0x04, 0x05, 0x00, 0x00, 0x00, 1, 2, 3, 4, 5]));
 });
 
 test("VGMPCMRAMWriteCommand", () => {
