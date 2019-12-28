@@ -1,6 +1,6 @@
 {
   "name": "vgm-parser",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "VGM file parser",
   "main": "dist/index.js",
   "files": [
@@ -9,8 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "npm run clean && npm run build",
+    "test": "jest",
+    "prepare": "npm run clean && npm test && npm run build",
     "clean": "rm-cli -ss -r dist",
     "build": "tsc",
     "typedoc": "typedoc"
@@ -22,9 +22,12 @@
     "url": "https://github.com/digital-sound-antiques/vgm-parser.git"
   },
   "devDependencies": {
+    "@types/jest": "^24.0.25",
     "@types/node": "^12.12.12",
+    "jest": "^24.9.0",
     "prettier": "^1.19.1",
     "rm-cli": "^1.4.2",
+    "ts-jest": "^24.2.0",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",

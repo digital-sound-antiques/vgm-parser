@@ -49,24 +49,25 @@ export type ChipTypeObject = {
 
 export type ChipClockObject = {
   clock: number;
-  dual: boolean;
+  dual?: boolean;
 };
 
 export type ChipsObject = {
   sn76489?: ChipClockObject & {
-    feedback: number;
-    shiftRegisterWidth: number;
-    flags: number;
+    feedback?: number;
+    shiftRegisterWidth?: number;
+    flags?: number;
+    t6w28?: boolean;
   };
   gameGearStereo?: null /* dummy */;
   ym2413?: ChipClockObject;
-  ym2612?: ChipClockObject & { chipType: ChipTypeObject };
-  ym2151?: ChipClockObject & { chipType: ChipTypeObject };
-  segaPcm?: ChipClockObject & { interfaceRegister: number };
+  ym2612?: ChipClockObject & { chipType?: ChipTypeObject };
+  ym2151?: ChipClockObject & { chipType?: ChipTypeObject };
+  segaPcm?: ChipClockObject & { interfaceRegister?: number };
   rf5c68?: ChipClockObject;
-  ym2203?: ChipClockObject & { ssgFlags: number };
-  ym2608?: ChipClockObject & { ssgFlags: number };
-  ym2610?: ChipClockObject & { chipType: ChipTypeObject };
+  ym2203?: ChipClockObject & { ssgFlags?: number };
+  ym2608?: ChipClockObject & { ssgFlags?: number };
+  ym2610?: ChipClockObject & { chipType?: ChipTypeObject };
   ym3812?: ChipClockObject;
   ym3526?: ChipClockObject;
   y8950?: ChipClockObject;
@@ -77,19 +78,19 @@ export type ChipsObject = {
   rf5c164?: ChipClockObject;
   pwm?: ChipClockObject;
   ay8910?: ChipClockObject & {
-    chipType: ChipTypeObject;
-    flags: number;
+    chipType?: ChipTypeObject;
+    flags?: number;
   };
   gameBoyDmg?: ChipClockObject;
-  nesApu?: ChipClockObject;
+  nesApu?: ChipClockObject & { fds?: boolean };
   multiPcm?: ChipClockObject;
   upd7759?: ChipClockObject;
-  okim6258?: ChipClockObject & { flags: number };
+  okim6258?: ChipClockObject & { flags?: number };
   okim6295?: ChipClockObject;
   k051649?: ChipClockObject;
-  k054539?: ChipClockObject & { flags: number };
+  k054539?: ChipClockObject & { flags?: number };
   huc6280?: ChipClockObject;
-  c140?: ChipClockObject & { chipType: ChipTypeObject };
+  c140?: ChipClockObject & { chipType?: ChipTypeObject };
   k053260?: ChipClockObject;
   pokey?: ChipClockObject;
   qsound?: ChipClockObject;
@@ -97,10 +98,10 @@ export type ChipsObject = {
   wonderSwan?: ChipClockObject;
   vsu?: ChipClockObject;
   saa1099?: ChipClockObject;
-  es5503?: ChipClockObject & { numberOfChannels: number };
-  es5506?: ChipClockObject & { chipType: ChipTypeObject; numberOfChannels: number };
+  es5503?: ChipClockObject & { numberOfChannels?: number };
+  es5506?: ChipClockObject & { chipType?: ChipTypeObject; numberOfChannels?: number };
   x1_010?: ChipClockObject;
-  c352?: ChipClockObject & { clockDivider: number };
+  c352?: ChipClockObject & { clockDivider?: number };
   ga20?: ChipClockObject;
 };
 
@@ -128,8 +129,8 @@ export type GD3TagObject = {
 
 export function createEmptyGD3TagObject(): GD3TagObject {
   return {
-    version: 0,
-    size: 0,
+    version: 0x100,
+    size: 22,
     trackTitle: "",
     gameName: "",
     system: "",
@@ -146,8 +147,8 @@ export function createEmptyGD3TagObject(): GD3TagObject {
   };
 }
 
-export function deepCloneGD3TagObject(arg: GD3TagObject): GD3TagObject {
-  return { ...arg };
+export function deepCloneGD3TagObject(arg: GD3TagObject | undefined): GD3TagObject | undefined {
+  return arg ? { ...arg } : undefined;
 }
 
 export type VersionObject = {
@@ -190,7 +191,7 @@ export type VGMObject = {
   volumeModifier: number;
   data: ArrayBuffer;
   usedChips: ChipName[];
-  gd3tag: GD3TagObject;
+  gd3tag?: GD3TagObject;
 };
 
 export function deepCloneVGMObject(arg: VGMObject): VGMObject {
@@ -218,7 +219,7 @@ export function createEmptyVGMObject(): VGMObject {
     },
     offsets: {
       eof: 0,
-      data: 0,
+      data: 0x100,
       loop: 0,
       gd3: 0,
       extraHeader: 0
@@ -228,12 +229,30 @@ export function createEmptyVGMObject(): VGMObject {
       total: 0
     },
     chips: {},
-    rate: 0,
+    rate: 60,
     loopModifier: 0,
     loopBase: 0,
     volumeModifier: 0,
     data: new ArrayBuffer(0),
     usedChips: [],
-    gd3tag: createEmptyGD3TagObject()
+    gd3tag: undefined
   };
+}
+
+export function calcGD3TagBodySize(obj: GD3TagObject): number {
+  return (
+    (obj.trackTitle.length +
+      obj.gameName.length +
+      obj.system.length +
+      obj.composer.length +
+      obj.releaseDate.length +
+      obj.vgmBy.length +
+      obj.notes.length +
+      obj.japanese.trackTitle.length +
+      obj.japanese.gameName.length +
+      obj.japanese.system.length +
+      obj.japanese.composer.length +
+      11) *
+    2
+  );
 }

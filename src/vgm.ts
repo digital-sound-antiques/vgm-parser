@@ -9,9 +9,12 @@ import {
   deepCloneGD3TagObject,
   deepCloneVGMObject,
   GD3TagObject,
-  createEmptyVGMObject
+  createEmptyVGMObject,
+  calcGD3TagBodySize
 } from "./vgm_object";
 import { parseVGM } from "./parser";
+import { buildVGM } from "./builder";
+import { VGMDataStream } from "./vgm_command";
 
 export class VGM implements VGMObject {
   private _obj: VGMObject;
@@ -67,6 +70,7 @@ export class VGM implements VGMObject {
   get data(): ArrayBuffer {
     return this._obj.data;
   }
+  /** this directly replace data buffer. To keep consistency, use setDataStream() or setData() instead. */
   set data(value: ArrayBuffer) {
     this._obj.data = value.slice(0);
   }
@@ -76,14 +80,14 @@ export class VGM implements VGMObject {
   set usedChips(value: ChipName[]) {
     this._obj.usedChips = value.slice(0);
   }
-  get gd3tag(): GD3TagObject {
+  get gd3tag(): GD3TagObject | undefined {
     return this._obj.gd3tag;
   }
-  set gd3tag(value: GD3TagObject) {
+  set gd3tag(value: GD3TagObject | undefined) {
     this._obj.gd3tag = deepCloneGD3TagObject(value);
   }
 
-  constructor(arg: VGMObject | null) {
+  constructor(arg?: VGMObject | null) {
     if (arg) {
       this._obj = deepCloneVGMObject(arg);
     } else {
@@ -107,6 +111,52 @@ export class VGM implements VGMObject {
    */
   static parse(data: ArrayBuffer): VGM {
     return new VGM(parseVGM(data));
+  }
+
+  build(): ArrayBuffer {
+    return buildVGM(this);
+  }
+
+  /**
+   * Access VGM data stream as a list of VGM commands.
+   * Note: This method always parses internal VGM data buffer.
+   */
+  getDataStream(): VGMDataStream {
+    return VGMDataStream.parse(this._obj);
+  }
+
+  /**
+   * set VGM data by VGMDataStream object
+   */
+  setDataStream(stream: VGMDataStream) {
+    this.setData(stream.build(), stream.totalSamples, stream.loopSamples, stream.loopByteOffset);
+  }
+
+  /**
+   * set VGM data with ArrayBuffer
+   * @param data ArrayBuffer which contains VGM data stream binary
+   * @param totalSamples Total samples
+   * @param loopSamples Loop samples. 0 if no loop
+   * @param loopByteOffset  Loop offset in byte. Relative from top of [data].
+   */
+  setData(data: ArrayBuffer, totalSamples: number, loopSamples: number, loopByteOffset: number) {
+    this._obj.data = data.slice(0);
+    this._obj.offsets.loop = 0 < loopSamples ? this._obj.offsets.data + loopByteOffset : 0;
+    this._obj.samples = {
+      total: totalSamples,
+      loop: loopSamples
+    };
+
+    if (this._obj.gd3tag) {
+      this._obj.offsets.gd3 = this._obj.offsets.data + data.byteLength;
+      this._obj.offsets.eof = this._obj.offsets.gd3 + 12 + calcGD3TagBodySize(this._obj.gd3tag);
+    } else {
+      this._obj.offsets.eof = this._obj.offsets.data + data.byteLength;
+    }
+  }
+
+  toJSON() {
+    return { ...this._obj, data: this.getDataStream() };
   }
 }
 

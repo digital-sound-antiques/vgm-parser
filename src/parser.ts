@@ -25,12 +25,14 @@ function getParamsCommonWithFlags(d: DataView, clockIndex: number, flagsIndex: n
 
 /** @hidden */
 function getParamsSn76489(d: DataView) {
+  const t6w28 = d.getUint8(0x0c) & 0x80 ? true : false;
   const obj = getParamsCommonWithFlags(d, 0x0c, 0x2b);
   if (obj) {
     return {
       ...obj,
       feedback: d.getUint16(0x28, true),
-      shiftRegisterWidth: d.getUint8(0x2a)
+      shiftRegisterWidth: d.getUint8(0x2a),
+      t6w28
     };
   }
   return undefined;
@@ -118,6 +120,18 @@ function getParamsYm2612(d: DataView) {
         value: t,
         name: t ? "YM3438" : "YM2612"
       }
+    };
+  }
+  return undefined;
+}
+
+/** @hidden */
+function getParamsNesApu(d: DataView) {
+  const obj = getParamsCommon(d, 0x84);
+  if (obj) {
+    return {
+      ...obj,
+      fds: d.getUint8(0x84) & 0x80 ? true : false
     };
   }
   return undefined;
@@ -373,7 +387,7 @@ export function parseVGM(data: ArrayBuffer): VGMObject {
 
   if (version >= 0x161) {
     chips.gameBoyDmg = getParamsCommon(d, 0x80);
-    chips.nesApu = getParamsCommon(d, 0x84);
+    chips.nesApu = getParamsNesApu(d);
     chips.multiPcm = getParamsCommon(d, 0x88);
     chips.upd7759 = getParamsCommon(d, 0x8c);
     chips.okim6258 = getParamsCommonWithFlags(d, 0x90, 0x94);
@@ -404,7 +418,7 @@ export function parseVGM(data: ArrayBuffer): VGMObject {
     chips.ga20 = getParamsCommon(d, 0xe0);
   }
 
-  const gd3tag = vgm.offsets.gd3 ? parseGD3(data.slice(vgm.offsets.gd3)) : createEmptyGD3TagObject();
+  const gd3tag = vgm.offsets.gd3 ? parseGD3(data.slice(vgm.offsets.gd3)) : undefined;
 
   return {
     ...vgm,

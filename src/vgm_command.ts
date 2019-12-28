@@ -1,4 +1,5 @@
-import { ChipName } from "./vgm_object";
+import { ChipName, VGMObject } from "./vgm_object";
+import { buildVGMData } from "./builder";
 
 export type VGMCommandObject = {
   cmd: number;
@@ -193,6 +194,10 @@ export abstract class VGMCommand implements VGMCommandObject {
   abstract get size(): number;
   abstract toUint8Array(): Uint8Array;
   abstract toObject(): VGMCommandObject;
+  abstract clone(): VGMCommand;
+  toJSON() {
+    return this.toObject();
+  }
 }
 
 export class VGMDataBlockCommand extends VGMCommand {
@@ -205,6 +210,14 @@ export class VGMDataBlockCommand extends VGMCommand {
     this.blockType = arg.blockType;
     this.blockSize = arg.blockSize;
     this.blockData = arg.blockData;
+  }
+
+  clone(): VGMDataBlockCommand {
+    return new VGMDataBlockCommand({
+      blockType: this.blockType,
+      blockSize: this.blockSize,
+      blockData: this.blockData.slice(0)
+    });
   }
 
   get size(): number {
@@ -262,6 +275,11 @@ export class VGMEndCommand extends VGMCommand {
   constructor() {
     super(0x66);
   }
+
+  clone(): VGMEndCommand {
+    return new VGMEndCommand();
+  }
+
   get size(): number {
     return 1;
   }
@@ -310,6 +328,10 @@ export class VGMWaitCommand extends VGMCommand {
     }
   }
 
+  clone(): VGMWaitCommand {
+    return new VGMWaitCommand({ cmd: this.cmd, nnnn: this.count });
+  }
+
   get size(): number {
     return this.cmd === 0x61 ? 3 : 1;
   }
@@ -318,7 +340,7 @@ export class VGMWaitCommand extends VGMCommand {
     const res = new Uint8Array(this.size);
     res[0] = this.cmd;
     if (this.cmd === 0x61) {
-      setUint16LE(res, 1, this.count - 1);
+      setUint16LE(res, 1, this.count);
     }
     return res;
   }
@@ -361,6 +383,11 @@ export class VGMWrite2ACommand extends VGMCommand {
   constructor(arg: { cmd: number }) {
     super(arg.cmd);
   }
+
+  clone(): VGMWrite2ACommand {
+    return new VGMWrite2ACommand({ cmd: this.cmd });
+  }
+
   get count(): number {
     return this.cmd & 0xf;
   }
@@ -408,6 +435,16 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
     this.writeOffset = arg.writeOffset;
     this.writeSize = arg.writeSize;
   }
+
+  clone(): VGMPCMRAMWriteCommand {
+    return new VGMPCMRAMWriteCommand({
+      blockType: this.blockType,
+      readOffset: this.readOffset,
+      writeOffset: this.writeOffset,
+      writeSize: this.writeSize
+    });
+  }
+
   get size(): number {
     return 12;
   }
@@ -458,16 +495,16 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
 export class VGMWriteDataCommand extends VGMCommand {
   chip: ChipName;
   index: number;
-  port: number | null;
-  addr: number | null;
+  port: number;
+  addr: number;
   data: number;
   size: number;
-  constructor(arg: { cmd: number; index: number; port: number | null; addr: number | null; data: number }) {
+  constructor(arg: { cmd: number; index?: number; port?: number; addr?: number; data: number }) {
     super(arg.cmd);
     this.chip = commandToChipName(arg.cmd);
-    this.index = arg.index;
-    this.port = arg.port;
-    this.addr = arg.addr;
+    this.index = arg.index || 0;
+    this.port = arg.port || 0;
+    this.addr = arg.addr || 0;
     this.data = arg.data;
     if ((0x30 <= this.cmd && this.cmd <= 0x3f) || this.cmd === 0x4f || this.cmd === 0x50) {
       this.size = 2;
@@ -485,6 +522,17 @@ export class VGMWriteDataCommand extends VGMCommand {
       throw new Error(`${this.cmd} is not a VGMWriteDataComand.`);
     }
   }
+
+  clone(): VGMWriteDataCommand {
+    return new VGMWriteDataCommand({
+      cmd: this.cmd,
+      index: this.index,
+      port: this.port,
+      addr: this.addr,
+      data: this.data
+    });
+  }
+
   toUint8Array(): Uint8Array {
     const res = new Uint8Array(this.size);
     res[0] = this.cmd;
@@ -492,40 +540,40 @@ export class VGMWriteDataCommand extends VGMCommand {
       res[1] = this.data;
       return res;
     } else if ((0x51 <= this.cmd && this.cmd <= 0x5f) || (0xa0 <= this.cmd && this.cmd <= 0xbf)) {
-      res[1] = this.addr!;
+      res[1] = this.addr;
       res[2] = this.data;
       return res;
     } else if (0xc0 <= this.cmd && this.cmd <= 0xc2) {
-      setUint16LE(res, 1, this.addr! | this.index ? 0x8000 : 0);
+      setUint16LE(res, 1, this.addr | this.index ? 0x8000 : 0);
       res[3] = this.data;
       return res;
     } else if (0xc3 === this.cmd) {
-      res[1] = this.addr! | this.index ? 0x80 : 0;
+      res[1] = this.addr | this.index ? 0x80 : 0;
       setUint16LE(res, 2, this.data);
       return res;
     } else if (0xc4 === this.cmd) {
       setUint16BE(res, 1, this.data);
-      res[3] = this.addr!;
+      res[3] = this.addr;
       return res;
     } else if (0xc5 <= this.cmd && this.cmd <= 0xc8) {
-      setUint16BE(res, 1, this.addr! | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
       res[3] = this.data;
       return res;
     } else if (0xd0 <= this.cmd && this.cmd <= 0xd2) {
-      res[0] = this.port! | this.index ? 0x80 : 0;
-      res[1] = this.addr!;
-      res[2] = this.data;
+      res[1] = this.port | this.index ? 0x80 : 0;
+      res[2] = this.addr;
+      res[3] = this.data;
       return res;
     } else if (0xd3 <= this.cmd && this.cmd <= 0xd5) {
-      setUint16BE(res, 1, this.addr! | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
       res[3] = this.data;
       return res;
     } else if (0xd6 === this.cmd) {
-      res[1] = this.addr! | this.index ? 0x80 : 0;
+      res[1] = this.addr | this.index ? 0x80 : 0;
       setUint16BE(res, 2, this.data);
       return res;
     } else if (0xe1 === this.cmd) {
-      setUint16BE(res, 1, this.addr! | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
       setUint16BE(res, 3, this.data);
       return res;
     } else {
@@ -539,18 +587,15 @@ export class VGMWriteDataCommand extends VGMCommand {
 
   static parse(buf: ArrayLike<number>, offset: number = 0): VGMWriteDataCommand | null {
     const cmd = buf[offset + 0];
-    if (cmd === 0x30) {
-      // 2nd SN76489
-      return new VGMWriteDataCommand({ cmd, index: 1, port: null, addr: null, data: buf[offset + 1] });
-    } else if (cmd === 0x3f) {
-      // 2nd GG Stereo
-      return new VGMWriteDataCommand({ cmd, index: 1, port: null, addr: null, data: buf[offset + 1] });
+    if (0x30 <= cmd && cmd <= 0x3f) {
+      // 0x30: 2nd SN76489, 0x31-0x3e: Reserved, 0x3f: 2nd GG Sterao
+      return new VGMWriteDataCommand({ cmd, index: 1, data: buf[offset + 1] });
     } else if (cmd === 0x4f) {
       // 1st GG Stereo
-      return new VGMWriteDataCommand({ cmd, index: 0, port: null, addr: null, data: buf[offset + 1] });
+      return new VGMWriteDataCommand({ cmd, index: 0, data: buf[offset + 1] });
     } else if (cmd === 0x50) {
       // 1st SN76489
-      return new VGMWriteDataCommand({ cmd, index: 0, port: null, addr: null, data: buf[offset + 1] });
+      return new VGMWriteDataCommand({ cmd, index: 0, data: buf[offset + 1] });
     } else if (cmd === 0xa0) {
       // AY-3-8910
       const addr = buf[offset + 1];
@@ -563,21 +608,21 @@ export class VGMWriteDataCommand extends VGMCommand {
     } else if (0xb0 <= cmd && cmd <= 0xbf) {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7f, data: buf[offset + 2] });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7f, data: buf[offset + 2] });
     } else if (0xc0 <= cmd && cmd <= 0xc2) {
       const addr = getUint16LE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7fff, data: buf[offset + 3] });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7fff, data: buf[offset + 3] });
     } else if (0xc3 === cmd) {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7f, data: getUint16LE(buf, offset + 2) });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7f, data: getUint16LE(buf, offset + 2) });
     } else if (0xc4 === cmd) {
-      return new VGMWriteDataCommand({ cmd, index: 0, port: null, addr: buf[3], data: getUint16BE(buf, offset + 1) });
+      return new VGMWriteDataCommand({ cmd, index: 0, addr: buf[3], data: getUint16BE(buf, offset + 1) });
     } else if (0xc5 <= cmd && cmd <= 0xc8) {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7fff, data: buf[offset + 3] });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7fff, data: buf[offset + 3] });
     } else if (0xd0 <= cmd && cmd <= 0xd2) {
       const port = buf[offset + 1] & 0x7f;
       const index = buf[offset + 1] & 0x80 ? 1 : 0;
@@ -585,21 +630,15 @@ export class VGMWriteDataCommand extends VGMCommand {
     } else if (0xd3 <= cmd && cmd <= 0xd5) {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7fff, data: buf[offset + 3] });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7fff, data: buf[offset + 3] });
     } else if (cmd === 0xd6) {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ cmd, index, port: null, addr: addr & 0x7f, data: getUint16BE(buf, offset + 3) });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7f, data: getUint16BE(buf, offset + 3) });
     } else if (cmd === 0xe1) {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
-      return new VGMWriteDataCommand({
-        cmd,
-        index,
-        port: null,
-        addr: addr & 0x7fff,
-        data: getUint16BE(buf, offset + 3)
-      });
+      return new VGMWriteDataCommand({ cmd, index, addr: addr & 0x7fff, data: getUint16BE(buf, offset + 3) });
     }
     return null;
   }
@@ -645,11 +684,19 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
   type: number;
   port: number;
   channel: number;
-  constructor(arg: { cmd: number; streamId: number; type: number; port: number; channel: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number; type: number; port: number; channel: number }) {
+    super(0x90, arg.streamId);
     this.type = arg.type;
     this.port = arg.port;
     this.channel = arg.channel;
+  }
+  clone(): VGMSetupStreamCommand {
+    return new VGMSetupStreamCommand({
+      streamId: this.streamId,
+      type: this.type,
+      port: this.port,
+      channel: this.channel
+    });
   }
   get size(): number {
     return 5;
@@ -667,7 +714,6 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
     const cmd = buf[offset];
     if (cmd === 0x90) {
       return new VGMSetupStreamCommand({
-        cmd: 0x90,
         streamId: buf[offset + 1],
         type: buf[offset + 2],
         port: buf[offset + 3],
@@ -702,11 +748,19 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
   dataBankId: number;
   stepSize: number;
   stepBase: number;
-  constructor(arg: { cmd: number; streamId: number; dataBankId: number; stepSize: number; stepBase: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number; dataBankId: number; stepSize: number; stepBase: number }) {
+    super(0x91, arg.streamId);
     this.dataBankId = arg.dataBankId;
     this.stepSize = arg.stepSize;
     this.stepBase = arg.stepBase;
+  }
+  clone(): VGMSetStreamDataCommand {
+    return new VGMSetStreamDataCommand({
+      streamId: this.streamId,
+      dataBankId: this.dataBankId,
+      stepSize: this.stepSize,
+      stepBase: this.stepBase
+    });
   }
   get size(): number {
     return 5;
@@ -724,7 +778,6 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
     const cmd = buf[offset];
     if (cmd === 0x91) {
       return new VGMSetStreamDataCommand({
-        cmd,
         streamId: buf[offset + 1],
         dataBankId: buf[offset + 2],
         stepSize: buf[offset + 3],
@@ -757,9 +810,15 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
 
 export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
   frequency: number;
-  constructor(arg: { cmd: number; streamId: number; frequency: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number; frequency: number }) {
+    super(0x92, arg.streamId);
     this.frequency = arg.frequency;
+  }
+  clone(): VGMSetStreamFrequencyCommand {
+    return new VGMSetStreamFrequencyCommand({
+      streamId: this.streamId,
+      frequency: this.frequency
+    });
   }
   get size(): number {
     return 6;
@@ -775,7 +834,6 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
     const cmd = buf[offset];
     if (cmd === 0x92) {
       return new VGMSetStreamFrequencyCommand({
-        cmd,
         streamId: buf[offset + 1],
         frequency: getUint32LE(buf, offset + 2)
       });
@@ -806,11 +864,19 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
   offset: number;
   lengthMode: number;
   dataLength: number;
-  constructor(arg: { cmd: number; streamId: number; offset: number; lengthMode: number; dataLength: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number; offset: number; lengthMode: number; dataLength: number }) {
+    super(0x93, arg.streamId);
     this.offset = arg.offset;
     this.lengthMode = arg.lengthMode;
     this.dataLength = arg.dataLength;
+  }
+  clone(): VGMStartStreamCommand {
+    return new VGMStartStreamCommand({
+      streamId: this.streamId,
+      offset: this.offset,
+      lengthMode: this.lengthMode,
+      dataLength: this.dataLength
+    });
   }
   get size(): number {
     return 11;
@@ -828,7 +894,6 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
     const cmd = buf[offset];
     if (cmd === 0x93) {
       return new VGMStartStreamCommand({
-        cmd,
         streamId: buf[offset + 1],
         offset: getUint32LE(buf, offset + 2),
         lengthMode: buf[offset + 6],
@@ -849,7 +914,7 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
   }
   static fromObject(obj: VGMCommandObject): VGMStartStreamCommand | null {
     const cmd = obj.cmd;
-    if (cmd === 0x91) {
+    if (cmd === 0x93) {
       if (obj.streamId == null || obj.offset == null || obj.lengthMode == null || obj.dataLength == null) {
         throw new Error(`Can't create VGMStartStreamCommand: required parameter is missing.`);
       }
@@ -860,8 +925,13 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
 }
 
 export class VGMStopStreamCommand extends VGMStreamCommand {
-  constructor(arg: { cmd: number; streamId: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number }) {
+    super(0x94, arg.streamId);
+  }
+  clone(): VGMStopStreamCommand {
+    return new VGMStopStreamCommand({
+      streamId: this.streamId
+    });
   }
   get size(): number {
     return 2;
@@ -875,10 +945,7 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
   static parse(buf: ArrayLike<number>, offset: number = 0): VGMStopStreamCommand | null {
     const cmd = buf[offset];
     if (cmd === 0x94) {
-      return new VGMStopStreamCommand({
-        cmd,
-        streamId: buf[offset + 1]
-      });
+      return new VGMStopStreamCommand({ streamId: buf[offset + 1] });
     }
     return null;
   }
@@ -904,17 +971,24 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
 export class VGMStartStreamFastCommand extends VGMStreamCommand {
   blockId: number;
   flags: number;
-  constructor(arg: { cmd: number; streamId: number; blockId: number; flags: number }) {
-    super(arg.cmd, arg.streamId);
+  constructor(arg: { streamId: number; blockId: number; flags: number }) {
+    super(0x95, arg.streamId);
     this.blockId = arg.blockId;
     this.flags = arg.flags;
+  }
+  clone(): VGMStartStreamFastCommand {
+    return new VGMStartStreamFastCommand({
+      streamId: this.streamId,
+      blockId: this.blockId,
+      flags: this.flags
+    });
   }
   get size(): number {
     return 5;
   }
   toUint8Array(): Uint8Array {
     const res = new Uint8Array(this.size);
-    res[0] = 0x93;
+    res[0] = 0x95;
     res[1] = this.streamId;
     setUint16LE(res, 2, this.blockId);
     res[4] = this.flags;
@@ -924,7 +998,6 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
     const cmd = buf[offset];
     if (cmd === 0x95) {
       return new VGMStartStreamFastCommand({
-        cmd,
         streamId: buf[offset + 1],
         blockId: getUint16LE(buf, offset + 2),
         flags: buf[offset + 4]
@@ -959,11 +1032,15 @@ export class VGMSeekPCMCommand extends VGMCommand {
     super(0xe0);
     this.offset = arg.offset;
   }
+  clone(): VGMSeekPCMCommand {
+    return new VGMSeekPCMCommand({ offset: this.offset });
+  }
   get size(): number {
     return 5;
   }
   toUint8Array(): Uint8Array {
     const res = new Uint8Array(this.size);
+    res[0] = 0xe0;
     setUint32LE(res, 1, this.offset);
     return res;
   }
@@ -1012,7 +1089,13 @@ export function parseVGMCommand(buf: ArrayLike<number>, offset: number): VGMComm
   if (result) {
     return result;
   }
-  throw new Error(`Parse Error:: 0x${buf[offset].toString(16)}`);
+  if (buf instanceof ArrayBuffer) {
+    throw new Error("Parse Error:: The buffer should not be an ArrayBuffer.");
+  }
+  if (offset < buf.length) {
+    throw new Error(`Parse Error:: 0x${buf[offset].toString(16)}`);
+  }
+  throw new Error(`Parse Error:: offset is out of range.`);
 }
 
 export function fromVGMCommandObject(obj: VGMCommandObject): VGMCommand {
@@ -1034,4 +1117,93 @@ export function fromVGMCommandObject(obj: VGMCommandObject): VGMCommand {
     return result;
   }
   throw new Error(`Unsupported command: 0x${obj.cmd.toString(16)}`);
+}
+
+export class VGMDataStream {
+  commands: Array<VGMCommand>;
+  byteLength: number = 0;
+  totalSamples: number = 0;
+  loopSamples: number = 0;
+  loopIndexOffset: number = 0;
+  loopByteOffset: number = 0;
+  private _loop: boolean = false;
+
+  constructor(commands: Array<VGMCommand> = []) {
+    this.commands = commands;
+  }
+
+  clone(): VGMDataStream {
+    const res = new VGMDataStream(this.commands.map(e => e.clone()));
+    res.byteLength = this.byteLength;
+    res.totalSamples = this.totalSamples;
+    res.loopSamples = this.loopSamples;
+    res.loopIndexOffset = this.loopIndexOffset;
+    res.loopByteOffset = this.loopByteOffset;
+    return res;
+  }
+
+  clear() {
+    this.commands = [];
+    this.totalSamples = 0;
+    this.loopSamples = 0;
+    this.loopIndexOffset = 0;
+    this.byteLength = 0;
+    this.loopByteOffset = 0;
+    this._loop = false;
+  }
+
+  get length(): number {
+    return this.commands.length;
+  }
+
+  push(cmd: VGMCommand) {
+    if (cmd instanceof VGMWaitCommand || cmd instanceof VGMWrite2ACommand) {
+      this.totalSamples += cmd.count;
+      if (this._loop) {
+        this.loopSamples += cmd.count;
+      }
+    }
+    this.commands.push(cmd);
+    this.byteLength += cmd.size;
+  }
+
+  markLoopPoint() {
+    this._loop = true;
+    this.loopIndexOffset = this.commands.length;
+    this.loopByteOffset = this.byteLength;
+    this.loopSamples = 0;
+  }
+
+  static parse(vgm: VGMObject): VGMDataStream {
+    const data = new Uint8Array(vgm.data);
+    const res = new VGMDataStream();
+    let rp = 0;
+    while (rp < data.byteLength) {
+      if (vgm.offsets.data + rp === vgm.offsets.loop) {
+        res.markLoopPoint();
+      }
+      const cmd = parseVGMCommand(data, rp);
+      if (cmd == null) break;
+      res.push(cmd);
+      rp += cmd.size;
+      if (cmd instanceof VGMEndCommand) break;
+    }
+    return res;
+  }
+
+  build(): ArrayBuffer {
+    return buildVGMData(this.commands);
+  }
+
+  toJSON() {
+    const { commands, loopSamples, loopIndexOffset, loopByteOffset, totalSamples, byteLength } = this;
+    return {
+      byteLength,
+      loopSamples,
+      totalSamples,
+      loopIndexOffset,
+      loopByteOffset,
+      commands
+    };
+  }
 }
