@@ -25,7 +25,7 @@ function getParamsCommonWithFlags(d: DataView, clockIndex: number, flagsIndex: n
 
 /** @hidden */
 function getParamsSn76489(d: DataView) {
-  const t6w28 = d.getUint8(0x0c) & 0x80 ? true : false;
+  const t6w28 = d.getUint8(0x0f) & 0x80 ? true : false;
   const obj = getParamsCommonWithFlags(d, 0x0c, 0x2b);
   if (obj) {
     return {
