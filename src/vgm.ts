@@ -19,6 +19,16 @@ import { VGMDataStream } from "./vgm_command";
 export class VGM implements VGMObject {
   private _obj: VGMObject;
 
+  private _updateEOFOffset() {
+    if (this._obj.gd3tag) {
+      this._obj.offsets.gd3 = this._obj.offsets.data + this._obj.data.byteLength;
+      this._obj.offsets.eof = this._obj.offsets.gd3 + 12 + calcGD3TagBodySize(this._obj.gd3tag);
+    } else {
+      this._obj.offsets.gd3 = 0;
+      this._obj.offsets.eof = this._obj.offsets.data + this._obj.data.byteLength;
+    }
+  }
+
   get version(): VersionObject {
     return this._obj.version;
   }
@@ -85,6 +95,7 @@ export class VGM implements VGMObject {
   }
   set gd3tag(value: GD3TagObject | undefined) {
     this._obj.gd3tag = deepCloneGD3TagObject(value);
+    this._updateEOFOffset();
   }
 
   constructor(arg?: VGMObject | null) {
@@ -146,13 +157,7 @@ export class VGM implements VGMObject {
       total: totalSamples,
       loop: loopSamples
     };
-
-    if (this._obj.gd3tag) {
-      this._obj.offsets.gd3 = this._obj.offsets.data + data.byteLength;
-      this._obj.offsets.eof = this._obj.offsets.gd3 + 12 + calcGD3TagBodySize(this._obj.gd3tag);
-    } else {
-      this._obj.offsets.eof = this._obj.offsets.data + data.byteLength;
-    }
+    this._updateEOFOffset();
   }
 
   toJSON() {
