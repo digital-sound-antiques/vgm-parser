@@ -22,7 +22,7 @@ const {
 } = require("vgm-parser");
 
 function toArrayBuffer(b) {
-  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+  return b.buffer.slice(b.byteOffset);
 }
 
 const buf = fs.readFileSync("./src/__tests__/test.vgm");
@@ -54,33 +54,6 @@ for (const cmd of stream.commands) {
     console.log(cmd);
   }
 }
-```
-
-# VGZ file support
-
-```javascript
-const fs = require("fs");
-const zlib = require("zlib");
-const { VGM } = require("vgm-parser");
-
-function toArrayBuffer(b) {
-  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
-}
-
-function loadVgmOrVgz(file) {
-  const buf = fs.readFileSync(file);
-  try {
-    return zlib.gunzipSync(buf);
-  } catch (e) {
-    return buf;
-  }
-}
-
-const buf = loadVgmOrVgz("test.vgz");
-
-const vgm = VGM.parse(toArrayBuffer(buf));
-
-console.log(vgm);
 ```
 
 # Build VGM from scratch

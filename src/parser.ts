@@ -2,8 +2,22 @@
  * @hidden
  * @internal
  */
-import { VGMObject, VersionObject, ChipsObject, GD3TagObject, createEmptyGD3TagObject, ChipName } from "./vgm_object";
-import { TextDecoder } from "util";
+import {
+  VGMObject,
+  VersionObject,
+  ChipsObject,
+  GD3TagObject,
+  createEmptyGD3TagObject,
+  ChipName,
+  ExtraHeaderObject,
+  ExtraChipClockObject,
+  ExtraChipVolumeObject,
+  chipIdToName
+} from "./vgm_object";
+
+require("util"); // for node.js: load TextDecoder globally.
+
+const { Zlib } = require("zlibjs/bin/gunzip.min.js");
 
 /** @hidden */
 function getParamsCommon(d: DataView, clockIndex: number) {
@@ -246,19 +260,6 @@ function getParamsC352(d: DataView) {
 }
 
 /** @hidden */
-function extractUsedChips(chips: ChipsObject): ChipName[] {
-  const _chips: any = chips;
-  const names = Object.keys(chips);
-  const result = new Array<ChipName>();
-  for (let name of names) {
-    if (_chips[name]) {
-      result.push(name as ChipName);
-    }
-  }
-  return result;
-}
-
-/** @hidden */
 function toVersionObject(code: number): VersionObject {
   const result = {
     code,
@@ -288,7 +289,54 @@ function parseNullTerminatedTextBlock(d: DataView, offset: number): string[] {
 }
 
 /** @hidden */
+function parseExtraHeader(data: ArrayBuffer): ExtraHeaderObject {
+  const d = new DataView(data);
+  const size = d.getUint32(0x00, true);
+  const offsets: { chipClock?: number; chipVolume?: number } = {};
+  let clocks: Array<ExtraChipClockObject> | undefined;
+  let volumes: Array<ExtraChipVolumeObject> | undefined;
+  if (8 <= size) {
+    offsets.chipClock = d.getUint32(0x04, true);
+    if (0 < offsets.chipClock) {
+      clocks = [];
+      const base = 0x04 + offsets.chipClock;
+      const count = d.getUint8(base);
+      for (let i = 0; i < count; i++) {
+        const chipId = d.getUint8(base + 1 + i * 5);
+        const clock = d.getUint32(base + 2 + i * 5, true);
+        const chip = chipIdToName(chipId) || "unknown";
+        clocks.push({ chip, chipId, clock });
+      }
+    }
+  }
+  if (12 <= size) {
+    offsets.chipVolume = d.getUint32(0x08, true);
+    if (0 < offsets.chipVolume) {
+      volumes = [];
+      const base = 0x08 + offsets.chipVolume;
+      const count = d.getUint8(base);
+      for (let i = 0; i < count; i++) {
+        const rawChipId = d.getUint8(base + 1 + i * 4);
+        const chipId = rawChipId & 0x7f;
+        const paired = rawChipId & 0x80 ? true : false;
+        const flags = d.getUint8(base + 2 + i * 4);
+        const rawVolume = d.getUint16(base + 3 + i * 4, true);
+        const volume = rawVolume & 0x7fff;
+        const absolute = rawVolume & 0x8000 ? true : false;
+        const chip = chipIdToName(chipId) || "unknown";
+        volumes.push({ chip, chipId, paired, flags, volume, absolute });
+      }
+    }
+  }
+  return {
+    clocks,
+    volumes
+  };
+}
+
+/** @hidden */
 function parseGD3(data: ArrayBuffer): GD3TagObject {
+  console.log(data.byteLength);
   const d = new DataView(data);
   const header = d.getUint32(0x00, true);
 
@@ -318,7 +366,22 @@ function parseGD3(data: ArrayBuffer): GD3TagObject {
   };
 }
 
-export function parseVGM(data: ArrayBuffer): VGMObject {
+function ensureGunzipped(data: ArrayBuffer): ArrayBuffer {
+  const ua = new Uint8Array(data);
+  if (ua[0] === 0x1f && ua[1] === 0x8b) {
+    const unzip = new Zlib.Gunzip(ua);
+    const plain = unzip.decompress();
+    console.log(plain);
+    if (0 < plain.byteOffset) {
+      return plain.buffer.slice(plain.byteOffset);
+    }
+    return plain.buffer;
+  }
+  return data;
+}
+
+export function parseVGM(input: ArrayBuffer): VGMObject {
+  const data = ensureGunzipped(input);
   const d = new DataView(data);
 
   const version = d.getUint32(0x08, true);
@@ -418,11 +481,18 @@ export function parseVGM(data: ArrayBuffer): VGMObject {
     chips.ga20 = getParamsCommon(d, 0xe0);
   }
 
+  for (const key in chips) {
+    if (chips[key as ChipName] == null) {
+      delete chips[key as ChipName];
+    }
+  }
+
+  const extraHeader = vgm.offsets.extraHeader ? parseExtraHeader(data.slice(vgm.offsets.extraHeader)) : undefined;
   const gd3tag = vgm.offsets.gd3 ? parseGD3(data.slice(vgm.offsets.gd3)) : undefined;
 
   return {
     ...vgm,
-    usedChips: extractUsedChips(chips),
+    extraHeader,
     data: data.slice(vgm.offsets.data),
     gd3tag
   };

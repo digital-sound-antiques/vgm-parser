@@ -1,47 +1,30 @@
+// prettier-ignore
 export type ChipName =
-  | "sn76489"
-  | "gameGearStereo"
-  | "ym2413"
-  | "ym2612"
-  | "ym2151"
-  | "segaPcm"
-  | "rf5c68"
-  | "ym2203"
-  | "ym2608"
-  | "ym2610"
-  | "ym3812"
-  | "ym3526"
-  | "y8950"
-  | "ymf262"
-  | "ymf278b"
-  | "ymf271"
-  | "ymz280b"
-  | "rf5c164"
-  | "pwm"
-  | "ay8910"
-  | "gameBoyDmg"
-  | "nesApu"
-  | "multiPcm"
-  | "upd7759"
-  | "okim6258"
-  | "okim6295"
-  | "k051649"
-  | "k054539"
-  | "huc6280"
-  | "c140"
-  | "k053260"
-  | "pokey"
-  | "qsound"
-  | "scsp"
-  | "wonderSwan"
-  | "vsu"
-  | "saa1099"
-  | "es5503"
-  | "es5506"
-  | "x1_010"
-  | "c352"
-  | "ga20"
+  | "sn76489" | "gameGearStereo" | "ym2413" | "ym2612"
+  | "ym2151" | "segaPcm" | "rf5c68" | "ym2203"
+  | "ym2608" | "ym2610" | "ym3812" | "ym3526"
+  | "y8950" | "ymf262" | "ymf278b" | "ymf271"
+  | "ymz280b" | "rf5c164" | "pwm" | "ay8910"
+  | "gameBoyDmg" | "nesApu" | "multiPcm" | "upd7759"
+  | "okim6258" | "okim6295" | "k051649" | "k054539"
+  | "huc6280" | "c140" | "k053260" | "pokey"
+  | "qsound" | "scsp" | "wonderSwan" | "vsu"
+  | "saa1099" | "es5503" | "es5506" | "x1_010"
+  | "c352" | "ga20"
   | "unknown";
+
+// prettier-ignore
+const _chipIdToName: Array<ChipName> = [
+  "sn76489", "ym2413", "ym2612", "ym2151", "segaPcm", "rf5c68", "ym2203", "ym2608", "ym2610",
+  "ym3812", "ym3526", "y8950", "ymf262", "ymf278b", "ymf271", "ymz280b", "rf5c164",
+  "pwm", "ay8910", "gameBoyDmg", "nesApu", "multiPcm", "upd7759", "okim6258", "okim6295", 
+  "k051649", "k054539", "huc6280", "c140", "k053260", "pokey", "qsound", "scsp", "wonderSwan",
+  "vsu", "saa1099", "es5503", "es5506", "x1_010", "c352", "ga20"
+];
+
+export function chipIdToName(chipId: number): ChipName | undefined {
+  return _chipIdToName[chipId];
+}
 
 export type ChipTypeObject = {
   value: number;
@@ -129,6 +112,29 @@ export type GD3TagObject = {
   };
 };
 
+export type ExtraChipClockObject = {
+  chip: ChipName;
+  chipId: number;
+  clock: number;
+};
+export type ExtraChipVolumeObject = {
+  chip: ChipName;
+  chipId: number;
+  paired: boolean;
+  flags: number;
+  volume: number;
+  absolute: boolean;
+};
+
+export type ExtraHeaderObject = {
+  clocks?: Array<ExtraChipClockObject>;
+  volumes?: Array<ExtraChipVolumeObject>;
+};
+
+export function deepCloneExtraHeaderObject(arg: ExtraHeaderObject | undefined): ExtraHeaderObject | undefined {
+  return arg ? JSON.parse(JSON.stringify(arg)) : undefined;
+}
+
 export function createEmptyGD3TagObject(): GD3TagObject {
   return {
     version: 0x100,
@@ -150,7 +156,7 @@ export function createEmptyGD3TagObject(): GD3TagObject {
 }
 
 export function deepCloneGD3TagObject(arg: GD3TagObject | undefined): GD3TagObject | undefined {
-  return arg ? { ...arg } : undefined;
+  return arg ? { ...arg, japanese: { ...arg.japanese } } : undefined;
 }
 
 export type VersionObject = {
@@ -191,8 +197,8 @@ export type VGMObject = {
   loopModifier: number;
   loopBase: number;
   volumeModifier: number;
+  extraHeader?: ExtraHeaderObject;
   data: ArrayBuffer;
-  usedChips: ChipName[];
   gd3tag?: GD3TagObject;
 };
 
@@ -206,8 +212,8 @@ export function deepCloneVGMObject(arg: VGMObject): VGMObject {
     loopModifier: arg.loopModifier,
     loopBase: arg.loopBase,
     volumeModifier: arg.volumeModifier,
+    extraHeader: deepCloneExtraHeaderObject(arg.extraHeader),
     data: arg.data.slice(0),
-    usedChips: arg.usedChips,
     gd3tag: deepCloneGD3TagObject(arg.gd3tag)
   };
 }
@@ -235,8 +241,8 @@ export function createEmptyVGMObject(): VGMObject {
     loopModifier: 0,
     loopBase: 0,
     volumeModifier: 0,
+    extraHeader: undefined,
     data: new ArrayBuffer(0),
-    usedChips: [],
     gd3tag: undefined
   };
 }

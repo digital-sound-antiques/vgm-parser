@@ -1,0 +1,97 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  width: 100%;
+  height: 100%;
+  background-color: #fafafa;
+}
+
+.en *:lang(ja) {
+  display: none;
+}
+.ja *:lang(en) {
+  display: none;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  font-family: Roboto;
+  color: rgba(0, 0, 0, 0.87);
+  overflow: auto;
+}
+
+a {
+  color: #3a76ff;
+  text-decoration: none;
+}
+
+section.page-header {
+  position: relative;
+  width: 100%;
+  color: #fff;
+  background-color: #3a76ff;
+  background-image: linear-gradient(120deg, #3a76ff, #155799);
+  padding: 72px;
+  box-shadow: 0 0 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+section.page-header.short {
+  position: relative;
+  width: 100%;
+  color: #fff;
+  background-color: #3a76ff;
+  background-image: linear-gradient(120deg, #3a76ff, #155799);
+  padding: 0 72px;
+  height: 56px;
+  top: 0;
+}
+
+.page-header h1 {
+  font-weight: bold;
+  font-size: 48px;
+  line-height: 72px;
+  vertical-align: middle;
+}
+
+.page-header h2 {
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 24px;
+}
+
+.page-header .btn {
+  display: inline-block;
+  padding: 0 8px;
+  height: 36px;
+  line-height: 36px;
+  border-radius: 2px;
+  border: 1px solid #fff;
+  font-size: 16px;
+  font-weight: normal;
+  margin: 16px 0;
+  vertical-align: middle;
+}
+
+.page-header a.btn {
+  color: white;
+  text-decoration: none;
+  transition: opacity 0.15s linear;
+}
+
+.page-header a.btn:hover {
+  opacity: 0.5;
+}
+
+#filename {
+  margin: 36px 72px 0 72px;
+}
+#stage {
+  margin: 18px 72px;
+  padding: 12px;
+  border: 1px dotted #808080;
+  border-radius: 4px;
+}

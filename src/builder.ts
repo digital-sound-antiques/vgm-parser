@@ -1,4 +1,11 @@
-import { VGMObject, GD3TagObject, ChipClockObject } from "./vgm_object";
+import {
+  VGMObject,
+  GD3TagObject,
+  ChipClockObject,
+  ExtraHeaderObject,
+  ExtraChipClockObject,
+  ExtraChipVolumeObject
+} from "./vgm_object";
 import { VGMCommand } from "./vgm_command";
 
 export class AutoResizeBuffer {
@@ -261,6 +268,10 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
 
   if (0x170 <= vgm.version.code) {
     buf.setUint32LE(0xbc, vgm.offsets.extraHeader ? vgm.offsets.extraHeader - 0xbc : 0);
+
+    if (vgm.extraHeader) {
+      _writeExtraHeader(buf, vgm.offsets.extraHeader, vgm.extraHeader);
+    }
   }
 
   if (0x171 <= vgm.version.code) {
@@ -305,6 +316,54 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
   }
 
   return vgm.version.code <= 0x100 ? 0x40 : vgm.offsets.data || 0x100;
+}
+
+function _writeExtraChipClocks(buf: AutoResizeBuffer, byteOffset: number, clocks: Array<ExtraChipClockObject>): number {
+  let wp = 0;
+  buf.setUint8(byteOffset + wp, clocks.length);
+  wp++;
+  for (const e of clocks) {
+    buf.setUint8(byteOffset + wp, e.chipId);
+    wp++;
+    buf.setUint32LE(byteOffset + wp, e.clock);
+    wp += 4;
+  }
+  return wp;
+}
+
+function _writeExtraChipVolumes(
+  buf: AutoResizeBuffer,
+  byteOffset: number,
+  volumes: Array<ExtraChipVolumeObject>
+): number {
+  let wp = 0;
+  buf.setUint8(byteOffset + wp, volumes.length);
+  wp++;
+  for (const e of volumes) {
+    buf.setUint8(byteOffset + wp, e.chipId | (e.paired ? 0x80 : 0));
+    wp++;
+    buf.setUint8(byteOffset + wp, e.flags);
+    wp++;
+    buf.setUint16LE(byteOffset + wp, e.volume | (e.absolute ? 0x8000 : 0));
+    wp += 2;
+  }
+  return wp;
+}
+
+function _writeExtraHeader(buf: AutoResizeBuffer, byteOffset: number, header: ExtraHeaderObject): number {
+  let headerSize = header.volumes ? 12 : 8;
+  buf.setUint32LE(byteOffset, headerSize);
+  let clockPartSize = 0;
+  let volumePartSize = 0;
+  if (header.clocks) {
+    clockPartSize = _writeExtraChipClocks(buf, byteOffset + headerSize, header.clocks);
+    buf.setUint32LE(byteOffset + 4, headerSize - 4);
+  }
+  if (header.volumes) {
+    volumePartSize = _writeExtraChipVolumes(buf, byteOffset + headerSize + clockPartSize, header.volumes);
+    buf.setUint32LE(byteOffset + 8, headerSize - 8 + clockPartSize);
+  }
+  return headerSize + clockPartSize + volumePartSize;
 }
 
 function _writeGD3Tag(buf: AutoResizeBuffer, byteOffset: number, gd3: GD3TagObject): number {

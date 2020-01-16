@@ -10,7 +10,8 @@ import {
   deepCloneVGMObject,
   GD3TagObject,
   createEmptyVGMObject,
-  calcGD3TagBodySize
+  calcGD3TagBodySize,
+  ExtraHeaderObject
 } from "./vgm_object";
 import { parseVGM } from "./parser";
 import { buildVGM } from "./builder";
@@ -85,10 +86,7 @@ export class VGM implements VGMObject {
     this._obj.data = value.slice(0);
   }
   get usedChips(): ChipName[] {
-    return this._obj.usedChips;
-  }
-  set usedChips(value: ChipName[]) {
-    this._obj.usedChips = value.slice(0);
+    return Object.keys(this._obj.chips) as ChipName[];
   }
   get gd3tag(): GD3TagObject | undefined {
     return this._obj.gd3tag;
@@ -97,7 +95,9 @@ export class VGM implements VGMObject {
     this._obj.gd3tag = deepCloneGD3TagObject(value);
     this._updateEOFOffset();
   }
-
+  get extraHeader(): ExtraHeaderObject | undefined {
+    return this._obj.extraHeader;
+  }
   constructor(arg?: VGMObject | null) {
     if (arg) {
       this._obj = deepCloneVGMObject(arg);

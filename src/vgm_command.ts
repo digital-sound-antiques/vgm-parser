@@ -450,6 +450,9 @@ export abstract class VGMWaitCommand extends VGMCommand {
 export class VGMWaitWordCommand extends VGMWaitCommand {
   constructor(arg: { count: number }) {
     super(0x61, arg.count);
+    if (arg.count < 0 || 65535 < arg.count) {
+      throw new Error(`Count overflow: ${arg.count}`);
+    }
   }
   copy(arg: { count?: number }) {
     return new VGMWaitWordCommand({ count: arg.count != null ? arg.count : this.count });
