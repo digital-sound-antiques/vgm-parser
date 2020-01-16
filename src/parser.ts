@@ -336,7 +336,6 @@ function parseExtraHeader(data: ArrayBuffer): ExtraHeaderObject {
 
 /** @hidden */
 function parseGD3(data: ArrayBuffer): GD3TagObject {
-  console.log(data.byteLength);
   const d = new DataView(data);
   const header = d.getUint32(0x00, true);
 
@@ -371,7 +370,6 @@ function ensureGunzipped(data: ArrayBuffer): ArrayBuffer {
   if (ua[0] === 0x1f && ua[1] === 0x8b) {
     const unzip = new Zlib.Gunzip(ua);
     const plain = unzip.decompress();
-    console.log(plain);
     if (0 < plain.byteOffset) {
       return plain.buffer.slice(plain.byteOffset);
     }
