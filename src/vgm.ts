@@ -124,8 +124,12 @@ export class VGM implements VGMObject {
     return new VGM(parseVGM(data));
   }
 
-  build(): ArrayBuffer {
-    return buildVGM(this);
+  /**
+   * build VGM binary
+   * @param opts.compress compress vgm data (.vgz)
+   */
+  build(opts: { compress?: boolean } = {}): ArrayBuffer {
+    return buildVGM(this, opts.compress);
   }
 
   /**

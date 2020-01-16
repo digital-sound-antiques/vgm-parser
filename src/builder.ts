@@ -8,6 +8,8 @@ import {
 } from "./vgm_object";
 import { VGMCommand } from "./vgm_command";
 
+const { Zlib } = require("zlibjs/bin/gzip.min.js");
+
 export class AutoResizeBuffer {
   _buf: ArrayBuffer;
   _view: DataView;
@@ -396,13 +398,19 @@ export function buildVGMData(commands: Array<VGMCommand>): ArrayBuffer {
   return buf.toArrayBuffer();
 }
 
-export function buildVGM(vgm: VGMObject): ArrayBuffer {
+export function buildVGM(vgm: VGMObject, compress: boolean = false): ArrayBuffer {
   const buf = new AutoResizeBuffer();
   let wp = _writeVGMHeader(buf, vgm);
   buf.setData(wp, new Uint8Array(vgm.data));
   wp += vgm.data.byteLength;
   if (vgm.gd3tag) {
     _writeGD3Tag(buf, vgm.offsets.gd3 || wp, vgm.gd3tag);
+  }
+
+  if (compress) {
+    const gzip = new Zlib.Gzip(new Uint8Array(buf.toArrayBuffer()));
+    const res: Uint8Array = gzip.compress();
+    return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);
   }
   return buf.toArrayBuffer();
 }

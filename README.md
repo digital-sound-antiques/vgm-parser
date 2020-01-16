@@ -22,7 +22,7 @@ const {
 } = require("vgm-parser");
 
 function toArrayBuffer(b) {
-  return b.buffer.slice(b.byteOffset);
+  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
 }
 
 const buf = fs.readFileSync("./src/__tests__/test.vgm");
@@ -89,5 +89,5 @@ console.log(stream);
 
 vgm.setDataStream(stream);
 
-fs.writeFileSync("output.vgm", Buffer.from(vgm.build()));
+fs.writeFileSync("output.vgz", Buffer.from(vgm.build({ compress: true })));
 ```

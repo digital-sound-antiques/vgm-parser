@@ -1,3 +1,6 @@
+# v0.8.2
+- Support building compressed (.vgz) file.
+
 # v0.8.0
 - Support browser.
 - Support extra header.

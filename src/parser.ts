@@ -369,11 +369,8 @@ function ensureGunzipped(data: ArrayBuffer): ArrayBuffer {
   const ua = new Uint8Array(data);
   if (ua[0] === 0x1f && ua[1] === 0x8b) {
     const unzip = new Zlib.Gunzip(ua);
-    const plain = unzip.decompress();
-    if (0 < plain.byteOffset) {
-      return plain.buffer.slice(plain.byteOffset);
-    }
-    return plain.buffer;
+    const plain: Uint8Array = unzip.decompress();
+    return plain.buffer.slice(plain.byteOffset, plain.byteOffset + plain.byteLength);
   }
   return data;
 }
