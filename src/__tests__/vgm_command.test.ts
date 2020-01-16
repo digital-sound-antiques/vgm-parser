@@ -1,7 +1,10 @@
 import {
   parseVGMCommand,
   VGMWriteDataCommand,
-  VGMWaitCommand,
+  VGMWaitNibbleCommand,
+  VGMWaitWordCommand,
+  VGMWait735Command,
+  VGMWait882Command,
   VGMSetupStreamCommand,
   VGMSetStreamDataCommand,
   VGMSetStreamFrequencyCommand,
@@ -20,34 +23,43 @@ test("VGMWriteDataCommand", () => {
   expect(cmd.size).toBe(3);
   expect(cmd.toObject()).toEqual({ chip: "ym2413", cmd: 0x51, index: 0, port: 0, addr: 16, data: 172, size: 3 });
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x51, 16, 172]));
+
+  const cpy = cmd.copy({ cmd: 0xa1, data: 182 });
+  expect(cpy.toUint8Array()).toEqual(new Uint8Array([0xa1, 16, 182]));
 });
 
-test("VGMWaitCommand 7xH", () => {
-  const cmd = new VGMWaitCommand({ cmd: 0x70 });
+test("VGMWaitNibCommand 7xH", () => {
+  const cmd = new VGMWaitNibbleCommand({ count: 1 });
   expect(cmd.size).toBe(1);
   expect(cmd.count).toBe(1);
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x70]));
+  const cpy = cmd.copy({ count: 15 });
+  expect(cpy.toUint8Array()).toEqual(new Uint8Array([0x7e]));
 });
 
-test("VGMWaitCommand 61H", () => {
-  const cmd = new VGMWaitCommand({ cmd: 0x61, nnnn: 32 });
+test("VGMWaitWordCommand 61H", () => {
+  const cmd = new VGMWaitWordCommand({ count: 32 });
   expect(cmd.size).toBe(3);
   expect(cmd.count).toBe(32);
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x61, 0x20, 0x00]));
+  const cpy = cmd.copy({ count: 15 });
+  expect(cpy.toUint8Array()).toEqual(new Uint8Array([0x61, 0x0f, 0x00]));
 });
 
-test("VGMWaitCommand 62H", () => {
-  const cmd = new VGMWaitCommand({ cmd: 0x62 });
+test("VGMWait735Command 62H", () => {
+  const cmd = new VGMWait735Command();
   expect(cmd.size).toBe(1);
   expect(cmd.count).toBe(735);
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x62]));
+  expect(cmd.clone().toUint8Array()).toEqual(new Uint8Array([0x62]));
 });
 
-test("VGMWaitCommand 63H", () => {
-  const cmd = new VGMWaitCommand({ cmd: 0x63 });
+test("VGMWait882Command 63H", () => {
+  const cmd = new VGMWait882Command();
   expect(cmd.size).toBe(1);
   expect(cmd.count).toBe(882);
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x63]));
+  expect(cmd.clone().toUint8Array()).toEqual(new Uint8Array([0x63]));
 });
 
 test("VGMDataBlockCommand", () => {
@@ -72,7 +84,7 @@ test("VGMPCMRAMWriteCommand", () => {
 
 test("VGMWrite2ACommand", () => {
   const obj = { cmd: 0x88 };
-  const cmd = new VGMWrite2ACommand(obj);
+  const cmd = new VGMWrite2ACommand({ count: 8 });
   expect(cmd.cmd).toBe(0x88);
   expect(cmd.size).toBe(1);
   expect(cmd.count).toBe(8);
@@ -154,7 +166,7 @@ test("parseVGMCommand", () => {
   expect(parseVGMCommand([0x51, 0, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
   expect(parseVGMCommand([0xa1, 0, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
   expect(parseVGMCommand([0x56, 0, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
-  expect(parseVGMCommand([0x61, 0x44, 0xac], 0)).toBeInstanceOf(VGMWaitCommand);
+  expect(parseVGMCommand([0x61, 0x44, 0xac], 0)).toBeInstanceOf(VGMWaitWordCommand);
 
   expect(parseVGMCommand([0x90, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(VGMSetupStreamCommand);
   expect(parseVGMCommand([0x91, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(VGMSetStreamDataCommand);

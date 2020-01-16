@@ -91,7 +91,7 @@ const {
   VGM, 
   VGMDataStream, 
   VGMWriteDataCommand, 
-  VGMWaitCommand, 
+  VGMWaitWordCommand, 
   VGMEndCommand 
 } = require("vgm-parser");
 
@@ -103,14 +103,14 @@ stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 48, data: 16 })); // set 
 stream.markLoopPoint(); // mark here as loop point
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 16, data: 172 })); // set f-number=172
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 24 })); // set oct=4, key-on
-stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 44100 })); // wait 1sec
+stream.push(new VGMWaitWordCommand({ count: 44100 })); // wait 1sec
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 8 })); // key-off
-stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 44100 / 8 })); // wait 1/8 sec
+stream.push(new VGMWaitWordCommand({ count: 44100 / 8 })); // wait 1/8 sec
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 16, data: 182 })); // set f-number=182
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 24 })); // set oct=4, key-on
-stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 44100 })); // wait 1sec
+stream.push(new VGMWaitWordCommand({ count: 44100 })); // wait 1sec
 stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 8 })); // key-off
-stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 44100 / 8 })); // wait 1/8 sec
+stream.push(new VGMWaitWordCommand({ count: 44100 / 8 })); // wait 1/8 sec
 stream.push(new VGMEndCommand());
 console.log(stream);
 
@@ -118,4 +118,3 @@ vgm.setDataStream(stream);
 
 fs.writeFileSync("output.vgm", Buffer.from(vgm.build()));
 ```
-

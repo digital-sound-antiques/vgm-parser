@@ -1,4 +1,11 @@
-import { VGM, VGMDataStream, VGMWriteDataCommand, VGMWaitCommand, VGMEndCommand } from "../index";
+import {
+  VGM,
+  VGMDataStream,
+  VGMWriteDataCommand,
+  VGMWaitNibbleCommand,
+  VGMWaitWordCommand,
+  VGMEndCommand
+} from "../index";
 
 test("VGMDataStream.build", () => {
   const vgm = new VGM();
@@ -8,14 +15,15 @@ test("VGMDataStream.build", () => {
   stream.markLoopPoint(); // mark here as loop point
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 16, data: 172 }));
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 24 }));
-  stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 0xac44 /*44100*/ }));
+  stream.push(new VGMWaitWordCommand({ count: 0xac44 }));
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 8 }));
-  stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 0x1588 /* 44100 / 8 */ }));
+  stream.push(new VGMWaitWordCommand({ count: 0x1588 }));
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 16, data: 182 }));
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 24 }));
-  stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 0xac44 }));
+  stream.push(new VGMWaitWordCommand({ count: 0xac44 }));
   stream.push(new VGMWriteDataCommand({ cmd: 0x51, addr: 32, data: 8 }));
-  stream.push(new VGMWaitCommand({ cmd: 0x61, nnnn: 0x1588 }));
+  stream.push(new VGMWaitWordCommand({ count: 0x1588 }));
+  stream.push(new VGMWaitNibbleCommand({ count: 16 }));
   stream.push(new VGMEndCommand());
 
   expect(stream.loopIndexOffset).toBe(1);
@@ -34,6 +42,7 @@ test("VGMDataStream.build", () => {
       0x61, 0x44, 0xac,
       0x51, 32, 8,
       0x61, 0x88, 0x15,
+      0x7f,
       0x66
     ])
   );

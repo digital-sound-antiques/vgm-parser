@@ -276,6 +276,7 @@ export abstract class VGMCommand implements VGMCommandObject {
   abstract toUint8Array(): Uint8Array;
   abstract toObject(): VGMCommandObject;
   abstract clone(): VGMCommand;
+  abstract copy(arg: Object): VGMCommand;
   toJSON() {
     return this.toObject();
   }
@@ -293,12 +294,16 @@ export class VGMDataBlockCommand extends VGMCommand {
     this.blockData = arg.blockData;
   }
 
-  clone(): VGMDataBlockCommand {
+  copy(arg: { blockType?: number; blockSize?: number; blockData?: Uint8Array }): VGMDataBlockCommand {
     return new VGMDataBlockCommand({
-      blockType: this.blockType,
-      blockSize: this.blockSize,
-      blockData: this.blockData.slice(0)
+      blockType: arg.blockType || this.blockType,
+      blockSize: arg.blockSize || this.blockSize,
+      blockData: arg.blockData || this.blockData.slice(0)
     });
+  }
+
+  clone(): VGMDataBlockCommand {
+    return this.copy({});
   }
 
   get chip(): ChipName {
@@ -362,8 +367,12 @@ export class VGMEndCommand extends VGMCommand {
     super(0x66);
   }
 
-  clone(): VGMEndCommand {
+  copy(arg: Object): VGMEndCommand {
     return new VGMEndCommand();
+  }
+
+  clone(): VGMEndCommand {
+    return this.copy({});
   }
 
   get size(): number {
@@ -397,31 +406,30 @@ export class VGMEndCommand extends VGMCommand {
   }
 }
 
-export class VGMWaitCommand extends VGMCommand {
+export abstract class VGMWaitCommand extends VGMCommand {
   count: number;
-  constructor(arg: { cmd: number; nnnn?: number }) {
-    super(arg.cmd);
-    if (arg.cmd === 0x61) {
-      this.count = arg.nnnn!;
-    } else if (arg.cmd === 0x62) {
+  constructor(cmd: number, count: number) {
+    super(cmd);
+    if (cmd == 0x61) {
+      this.count = count;
+    } else if (cmd == 0x62) {
       this.count = 735;
-    } else if (arg.cmd === 0x63) {
+    } else if (cmd == 0x63) {
       this.count = 882;
-    } else if (0x70 <= arg.cmd && arg.cmd <= 0x7f) {
-      this.count = (arg.cmd & 0xf) + 1;
+    } else if (0x70 <= cmd && cmd <= 0x7f) {
+      this.count = (cmd & 15) + 1;
     } else {
-      throw new Error(`${this.cmd} is not a VGMWaitCommand.`);
+      throw new Error(`0x${cmd.toString(16)} is not a VGMWaitCommand.`);
+    }
+    if (this.count !== count) {
+      throw new Error(
+        `Count ${count} is given for command 0x${cmd.toString(16)} but the count should be ${this.count}.`
+      );
     }
   }
-
-  clone(): VGMWaitCommand {
-    return new VGMWaitCommand({ cmd: this.cmd, nnnn: this.count });
-  }
-
   get size(): number {
     return this.cmd === 0x61 ? 3 : 1;
   }
-
   toUint8Array(): Uint8Array {
     const res = new Uint8Array(this.size);
     res[0] = this.cmd;
@@ -430,19 +438,6 @@ export class VGMWaitCommand extends VGMCommand {
     }
     return res;
   }
-
-  static parse(buf: ArrayLike<number>, offset: number = 0): VGMWaitCommand | null {
-    const cmd = buf[offset];
-    if (cmd === 0x61) {
-      const nnnn = getUint16LE(buf, offset + 1);
-      return new VGMWaitCommand({ cmd, nnnn });
-    }
-    if (cmd === 0x62 || cmd === 0x63 || (0x70 <= cmd && cmd <= 0x7f)) {
-      return new VGMWaitCommand({ cmd });
-    }
-    return null;
-  }
-
   toObject(): VGMCommandObject {
     return {
       cmd: this.cmd,
@@ -450,28 +445,129 @@ export class VGMWaitCommand extends VGMCommand {
       count: this.count
     };
   }
+}
 
-  static fromObject(obj: VGMCommandObject): VGMWaitCommand | null {
-    if (obj.cmd === 0x62 || obj.cmd === 0x63 || (0x70 <= obj.cmd && obj.cmd <= 0x7f)) {
-      return new VGMWaitCommand(obj);
+export class VGMWaitWordCommand extends VGMWaitCommand {
+  constructor(arg: { count: number }) {
+    super(0x61, arg.count);
+  }
+  copy(arg: { count?: number }) {
+    return new VGMWaitWordCommand({ count: arg.count || this.count });
+  }
+  clone(): VGMWaitWordCommand {
+    return this.copy({});
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMWaitWordCommand | null {
+    const cmd = buf[offset];
+    if (cmd === 0x61) {
+      const nnnn = getUint16LE(buf, offset + 1);
+      return new VGMWaitWordCommand({ count: nnnn });
     }
+    return null;
+  }
+  static fromObject(obj: VGMCommandObject): VGMWaitWordCommand | null {
     if (obj.cmd === 0x61) {
       if (obj.count == null) {
         throw new Error(`Can't create VGMWaitCommand: obj.count is missing.`);
       }
-      return new VGMWaitCommand({ cmd: obj.cmd, nnnn: obj.count });
+      return new VGMWaitWordCommand({ count: obj.count });
+    }
+    return null;
+  }
+}
+
+export class VGMWaitNibbleCommand extends VGMWaitCommand {
+  constructor(arg: { count: number }) {
+    super(0x70 | ((arg.count - 1) & 15), arg.count);
+    if (arg.count < 1 || 16 < arg.count) {
+      throw new Error(`Invalid count: ${arg.count}`);
+    }
+  }
+  copy(arg: { count?: number }) {
+    return new VGMWaitNibbleCommand({ count: arg.count || this.count });
+  }
+  clone(): VGMWaitNibbleCommand {
+    return this.copy({});
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMWaitNibbleCommand | null {
+    const cmd = buf[offset];
+    if (0x70 <= cmd && cmd <= 0x7f) {
+      return new VGMWaitNibbleCommand({ count: (cmd & 15) + 1 });
+    }
+    return null;
+  }
+  static fromObject(obj: VGMCommandObject): VGMWaitNibbleCommand | null {
+    if (0x70 <= obj.cmd && obj.cmd <= 0x7f) {
+      return new VGMWaitNibbleCommand({ count: (obj.cmd & 15) + 1 });
+    }
+    return null;
+  }
+}
+
+export class VGMWait735Command extends VGMWaitCommand {
+  constructor() {
+    super(0x62, 735);
+  }
+  copy(arg: {}): VGMWait735Command {
+    return new VGMWait735Command();
+  }
+  clone(): VGMWait735Command {
+    return this.copy({});
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMWait735Command | null {
+    const cmd = buf[offset];
+    if (cmd === 0x62) {
+      return new VGMWait735Command();
+    }
+    return null;
+  }
+  static fromObject(obj: VGMCommandObject): VGMWait735Command | null {
+    if (obj.cmd === 0x62) {
+      return new VGMWait735Command();
+    }
+    return null;
+  }
+}
+
+export class VGMWait882Command extends VGMWaitCommand {
+  constructor() {
+    super(0x63, 882);
+  }
+  copy(arg: {}): VGMWait882Command {
+    return new VGMWait882Command();
+  }
+  clone(): VGMWait882Command {
+    return this.copy({});
+  }
+  static parse(buf: ArrayLike<number>, offset: number = 0): VGMWait882Command | null {
+    const cmd = buf[offset];
+    if (cmd === 0x63) {
+      return new VGMWait882Command();
+    }
+    return null;
+  }
+  static fromObject(obj: VGMCommandObject): VGMWait882Command | null {
+    if (obj.cmd === 0x63) {
+      return new VGMWait882Command();
     }
     return null;
   }
 }
 
 export class VGMWrite2ACommand extends VGMCommand {
-  constructor(arg: { cmd: number }) {
-    super(arg.cmd);
+  constructor(arg: { count: number }) {
+    super(0x80 | (arg.count & 15));
+    if (arg.count < 0 || 15 < arg.count) {
+      throw new Error(`Invalid count ${arg.count} for VGMWrite2ACommand.`);
+    }
+  }
+
+  copy(arg: { count?: number }): VGMWrite2ACommand {
+    return new VGMWrite2ACommand({ count: arg.count || this.count });
   }
 
   clone(): VGMWrite2ACommand {
-    return new VGMWrite2ACommand({ cmd: this.cmd });
+    return this.copy({});
   }
 
   get count(): number {
@@ -488,7 +584,7 @@ export class VGMWrite2ACommand extends VGMCommand {
   static parse(buf: ArrayLike<number>, offset: number = 0): VGMWrite2ACommand | null {
     const cmd = buf[offset];
     if (0x80 <= cmd && cmd <= 0x8f) {
-      return new VGMWrite2ACommand({ cmd });
+      return new VGMWrite2ACommand({ count: cmd & 15 });
     }
     return null;
   }
@@ -503,7 +599,7 @@ export class VGMWrite2ACommand extends VGMCommand {
 
   static fromObject(obj: VGMCommandObject): VGMWrite2ACommand | null {
     if (0x80 <= obj.cmd && obj.cmd <= 0x8f) {
-      return new VGMWrite2ACommand(obj);
+      return new VGMWrite2ACommand({ count: obj.cmd & 15 });
     }
     return null;
   }
@@ -522,13 +618,22 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
     this.writeSize = arg.writeSize;
   }
 
-  clone(): VGMPCMRAMWriteCommand {
+  copy(arg: {
+    blockType?: number;
+    readOffset?: number;
+    writeOffset?: number;
+    writeSize?: number;
+  }): VGMPCMRAMWriteCommand {
     return new VGMPCMRAMWriteCommand({
-      blockType: this.blockType,
-      readOffset: this.readOffset,
-      writeOffset: this.writeOffset,
-      writeSize: this.writeSize
+      blockType: arg.blockType || this.blockType,
+      readOffset: arg.readOffset || this.readOffset,
+      writeOffset: arg.writeOffset || this.writeOffset,
+      writeSize: arg.writeSize || this.writeSize
     });
+  }
+
+  clone(): VGMPCMRAMWriteCommand {
+    return this.copy({});
   }
 
   get size(): number {
@@ -609,14 +714,18 @@ export class VGMWriteDataCommand extends VGMCommand {
     }
   }
 
-  clone(): VGMWriteDataCommand {
+  copy(arg: { cmd?: number; index?: number; port?: number; addr?: number; data?: number }): VGMWriteDataCommand {
     return new VGMWriteDataCommand({
-      cmd: this.cmd,
-      index: this.index,
-      port: this.port,
-      addr: this.addr,
-      data: this.data
+      cmd: arg.cmd || this.cmd,
+      index: arg.index || this.index,
+      port: arg.port || this.port,
+      addr: arg.addr || this.addr,
+      data: arg.data || this.data
     });
+  }
+
+  clone(): VGMWriteDataCommand {
+    return this.copy({});
   }
 
   toUint8Array(): Uint8Array {
@@ -776,14 +885,20 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
     this.port = arg.port;
     this.channel = arg.channel;
   }
-  clone(): VGMSetupStreamCommand {
+
+  copy(arg: { streamId?: number; type?: number; port?: number; channel?: number }): VGMSetupStreamCommand {
     return new VGMSetupStreamCommand({
-      streamId: this.streamId,
-      type: this.type,
-      port: this.port,
-      channel: this.channel
+      streamId: arg.streamId || this.streamId,
+      type: arg.type || this.type,
+      port: arg.port || this.port,
+      channel: arg.channel || this.channel
     });
   }
+
+  clone(): VGMSetupStreamCommand {
+    return this.copy({});
+  }
+
   get size(): number {
     return 5;
   }
@@ -840,14 +955,20 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
     this.stepSize = arg.stepSize;
     this.stepBase = arg.stepBase;
   }
-  clone(): VGMSetStreamDataCommand {
+
+  copy(arg: { streamId?: number; dataBankId?: number; stepSize?: number; stepBase?: number }): VGMSetStreamDataCommand {
     return new VGMSetStreamDataCommand({
-      streamId: this.streamId,
-      dataBankId: this.dataBankId,
-      stepSize: this.stepSize,
-      stepBase: this.stepBase
+      streamId: arg.streamId || this.streamId,
+      dataBankId: arg.dataBankId || this.dataBankId,
+      stepSize: arg.stepSize || this.stepSize,
+      stepBase: arg.stepBase || this.stepBase
     });
   }
+
+  clone(): VGMSetStreamDataCommand {
+    return this.copy({});
+  }
+
   get size(): number {
     return 5;
   }
@@ -900,11 +1021,14 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
     super(0x92, arg.streamId);
     this.frequency = arg.frequency;
   }
-  clone(): VGMSetStreamFrequencyCommand {
+  copy(arg: { streamId?: number; frequency?: number }): VGMSetStreamFrequencyCommand {
     return new VGMSetStreamFrequencyCommand({
-      streamId: this.streamId,
-      frequency: this.frequency
+      streamId: arg.streamId || this.streamId,
+      frequency: arg.frequency || this.frequency
     });
+  }
+  clone(): VGMSetStreamFrequencyCommand {
+    return this.copy({});
   }
   get size(): number {
     return 6;
@@ -956,13 +1080,16 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
     this.lengthMode = arg.lengthMode;
     this.dataLength = arg.dataLength;
   }
-  clone(): VGMStartStreamCommand {
+  copy(arg: { streamId?: number; offset?: number; lengthMode?: number; dataLength?: number }): VGMStartStreamCommand {
     return new VGMStartStreamCommand({
-      streamId: this.streamId,
-      offset: this.offset,
-      lengthMode: this.lengthMode,
-      dataLength: this.dataLength
+      streamId: arg.streamId || this.streamId,
+      offset: arg.offset || this.offset,
+      lengthMode: arg.lengthMode || this.lengthMode,
+      dataLength: arg.dataLength || this.dataLength
     });
+  }
+  clone(): VGMStartStreamCommand {
+    return this.copy({});
   }
   get size(): number {
     return 11;
@@ -1014,10 +1141,13 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
   constructor(arg: { streamId: number }) {
     super(0x94, arg.streamId);
   }
-  clone(): VGMStopStreamCommand {
+  copy(arg: { streamId?: number }): VGMStopStreamCommand {
     return new VGMStopStreamCommand({
-      streamId: this.streamId
+      streamId: arg.streamId || this.streamId
     });
+  }
+  clone(): VGMStopStreamCommand {
+    return this.copy({});
   }
   get size(): number {
     return 2;
@@ -1062,12 +1192,15 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
     this.blockId = arg.blockId;
     this.flags = arg.flags;
   }
-  clone(): VGMStartStreamFastCommand {
+  copy(arg: { streamId?: number; blockId?: number; flags?: number }): VGMStartStreamFastCommand {
     return new VGMStartStreamFastCommand({
-      streamId: this.streamId,
-      blockId: this.blockId,
-      flags: this.flags
+      streamId: arg.streamId || this.streamId,
+      blockId: arg.blockId || this.blockId,
+      flags: arg.flags || this.flags
     });
+  }
+  clone(): VGMStartStreamFastCommand {
+    return this.copy({});
   }
   get size(): number {
     return 5;
@@ -1118,8 +1251,11 @@ export class VGMSeekPCMCommand extends VGMCommand {
     super(0xe0);
     this.offset = arg.offset;
   }
+  copy(arg: { offset?: number }): VGMSeekPCMCommand {
+    return new VGMSeekPCMCommand({ offset: arg.offset || this.offset });
+  }
   clone(): VGMSeekPCMCommand {
-    return new VGMSeekPCMCommand({ offset: this.offset });
+    return this.copy({});
   }
   get size(): number {
     return 5;
@@ -1161,7 +1297,10 @@ export function parseVGMCommand(buf: ArrayLike<number>, offset: number): VGMComm
   const result =
     VGMWrite2ACommand.parse(buf, offset) ||
     VGMWriteDataCommand.parse(buf, offset) ||
-    VGMWaitCommand.parse(buf, offset) ||
+    VGMWaitNibbleCommand.parse(buf, offset) ||
+    VGMWaitWordCommand.parse(buf, offset) ||
+    VGMWait735Command.parse(buf, offset) ||
+    VGMWait882Command.parse(buf, offset) ||
     VGMSeekPCMCommand.parse(buf, offset) ||
     VGMDataBlockCommand.parse(buf, offset) ||
     VGMPCMRAMWriteCommand.parse(buf, offset) ||
@@ -1188,7 +1327,10 @@ export function fromVGMCommandObject(obj: VGMCommandObject): VGMCommand {
   const result =
     VGMWrite2ACommand.fromObject(obj) ||
     VGMWriteDataCommand.fromObject(obj) ||
-    VGMWaitCommand.fromObject(obj) ||
+    VGMWaitNibbleCommand.fromObject(obj) ||
+    VGMWaitWordCommand.fromObject(obj) ||
+    VGMWait735Command.fromObject(obj) ||
+    VGMWait882Command.fromObject(obj) ||
     VGMSeekPCMCommand.fromObject(obj) ||
     VGMDataBlockCommand.fromObject(obj) ||
     VGMPCMRAMWriteCommand.fromObject(obj) ||
