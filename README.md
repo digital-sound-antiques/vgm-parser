@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/vgm-parser.svg)](https://badge.fury.io/js/vgm-parser)
 
-VGM parser module for JavaScript.
+VGM parser module for JavaScript. [Demo](https://digital-sound-antiques.github.io/vgm-parser/)
 
 # Install
 
