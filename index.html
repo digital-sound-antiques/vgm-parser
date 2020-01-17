@@ -2,6 +2,7 @@
 <html>
   <meta>
     <title>vgm-parser demo</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/big-json-viewer/dist/default.css">
     <script src="https://unpkg.com/big-json-viewer/dist/browser-api.js"></script>
     <script src="demo/bundle.js"></script>
@@ -33,7 +34,7 @@ function onDragOver(e) {
 function onDragEnter(e) {
   e.preventDefault();
   if (dragCounter == 0) {
-    document.body.style.backgroundColor = "#fcfcff";
+    document.body.classList.add('dragover');
   }
   dragCounter++;
 }
@@ -41,13 +42,13 @@ function onDragEnter(e) {
 function onDragLeave(e) {
   dragCounter--;
   if (dragCounter == 0) {
-    document.body.style.backgroundColor = null;
+    document.body.classList.remove('dragover');
   }
 }
 
 function onDrop(e) {
   dragCounter = 0;
-  document.body.style.backgroundColor = null;
+  document.body.classList.remove('dragover');
   e.preventDefault();
   if (0 < e.dataTransfer.files.length) {
     loadFromFile(e.dataTransfer.files[0], null);
@@ -73,9 +74,13 @@ window.addEventListener("DOMContentLoaded", function() {
         VGM file parser module for JavaScript.
       </h2>
     </section>
-    <div id="filename"></div>
-    <div id="stage">
-      Drag &amp; Drop .vgm/.vgz file here.
+    <div id="dnd-box">
+      <p>
+        <i class="material-icons" style="vertical-align: middle;">input</i>
+        <span style="vertical-align: middle;">Drag &amp; Drop .vgm/.vgz File Here.</span>
+      </p>
     </div>
+    <div id="filename"></div>
+    <div id="stage"></div>
   </body>
 </html>
