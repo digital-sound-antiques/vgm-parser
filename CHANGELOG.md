@@ -1,3 +1,7 @@
+# v0.8.3
+- Support building VGM files version less than 1.71.
+- Adjust offsets in header before build.
+
 # v0.8.2
 - Support building compressed (.vgz) file.
 

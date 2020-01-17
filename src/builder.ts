@@ -4,7 +4,8 @@ import {
   ChipClockObject,
   ExtraHeaderObject,
   ExtraChipClockObject,
-  ExtraChipVolumeObject
+  ExtraChipVolumeObject,
+  updateOffsets
 } from "./vgm_object";
 import { VGMCommand } from "./vgm_command";
 
@@ -398,7 +399,13 @@ export function buildVGMData(commands: Array<VGMCommand>): ArrayBuffer {
   return buf.toArrayBuffer();
 }
 
-export function buildVGM(vgm: VGMObject, compress: boolean = false): ArrayBuffer {
+export function buildVGM(
+  vgm: VGMObject,
+  opts: { allowInconsistentOffsets?: boolean; compress?: boolean } = {}
+): ArrayBuffer {
+  if (!opts.allowInconsistentOffsets) {
+    updateOffsets(vgm);
+  }
   const buf = new AutoResizeBuffer();
   let wp = _writeVGMHeader(buf, vgm);
   buf.setData(wp, new Uint8Array(vgm.data));
@@ -407,7 +414,7 @@ export function buildVGM(vgm: VGMObject, compress: boolean = false): ArrayBuffer
     _writeGD3Tag(buf, vgm.offsets.gd3 || wp, vgm.gd3tag);
   }
 
-  if (compress) {
+  if (opts.compress) {
     const gzip = new Zlib.Gzip(new Uint8Array(buf.toArrayBuffer()));
     const res: Uint8Array = gzip.compress();
     return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);

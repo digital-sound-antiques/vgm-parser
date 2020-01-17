@@ -219,15 +219,15 @@ export function deepCloneVGMObject(arg: VGMObject): VGMObject {
 }
 
 export function createEmptyVGMObject(): VGMObject {
-  return {
+  const obj = {
     version: {
-      code: 0x170,
+      code: 0x171,
       major: "1",
-      minor: "70"
+      minor: "71"
     },
     offsets: {
       eof: 0,
-      data: 0x100,
+      data: 0,
       loop: 0,
       gd3: 0,
       extraHeader: 0
@@ -245,6 +245,8 @@ export function createEmptyVGMObject(): VGMObject {
     data: new ArrayBuffer(0),
     gd3tag: undefined
   };
+  updateOffsets(obj);
+  return obj;
 }
 
 export function calcGD3TagBodySize(obj: GD3TagObject): number {
@@ -263,4 +265,61 @@ export function calcGD3TagBodySize(obj: GD3TagObject): number {
       11) *
     2
   );
+}
+
+export function calcExtraHeaderSize(obj: ExtraHeaderObject): number {
+  const { clocks, volumes } = obj;
+  const headSize = volumes ? 12 : 8;
+  const clocksSize = clocks ? 1 + clocks.length * 5 : 0;
+  const volumesSize = volumes ? 1 + volumes.length * 4 : 0;
+  return headSize + clocksSize + volumesSize;
+}
+
+function _calcMinimumExtraHeaderOffset(obj: VGMObject): number {
+  if (obj.version.code < 0x170) {
+    throw new Error("vgm version >= 1.70 is required to use extra header.");
+  }
+  if (obj.version.code < 0x171) {
+    return 0xc0;
+  } else {
+    return 0x100;
+  }
+}
+
+function _calcMinimumVGMHeaderSize(obj: VGMObject): number {
+  if (obj.version.code < 0x150) {
+    return 0x40;
+  } else if (obj.version.code < 0x151) {
+    return Math.max(0x40, obj.offsets.data);
+  } else if (obj.version.code < 0x160) {
+    return Math.max(0x80, obj.offsets.data);
+  } else if (obj.version.code < 0x170) {
+    return Math.max(0xc0, obj.offsets.data);
+  } else {
+    const extraHeaderSize = obj.extraHeader ? calcExtraHeaderSize(obj.extraHeader) : 0;
+    return _calcMinimumExtraHeaderOffset(obj) + extraHeaderSize;
+  }
+}
+
+export function updateOffsets(obj: VGMObject) {
+  const newDataOffset = Math.max(obj.offsets.data, _calcMinimumVGMHeaderSize(obj));
+  const dataOffsetDiff = newDataOffset - obj.offsets.data;
+
+  obj.offsets.data = newDataOffset;
+
+  if (obj.offsets.loop) {
+    obj.offsets.loop += dataOffsetDiff;
+  }
+
+  if (obj.extraHeader) {
+    obj.offsets.extraHeader = _calcMinimumExtraHeaderOffset(obj);
+  }
+
+  if (obj.gd3tag) {
+    obj.offsets.gd3 = obj.offsets.data + obj.data.byteLength;
+    obj.offsets.eof = obj.offsets.gd3 + 12 + calcGD3TagBodySize(obj.gd3tag);
+  } else {
+    obj.offsets.gd3 = 0;
+    obj.offsets.eof = obj.offsets.data + obj.data.byteLength;
+  }
 }

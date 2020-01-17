@@ -10,8 +10,8 @@ import {
   deepCloneVGMObject,
   GD3TagObject,
   createEmptyVGMObject,
-  calcGD3TagBodySize,
-  ExtraHeaderObject
+  ExtraHeaderObject,
+  updateOffsets
 } from "./vgm_object";
 import { parseVGM } from "./parser";
 import { buildVGM } from "./builder";
@@ -20,21 +20,16 @@ import { VGMDataStream } from "./vgm_command";
 export class VGM implements VGMObject {
   private _obj: VGMObject;
 
-  private _updateEOFOffset() {
-    if (this._obj.gd3tag) {
-      this._obj.offsets.gd3 = this._obj.offsets.data + this._obj.data.byteLength;
-      this._obj.offsets.eof = this._obj.offsets.gd3 + 12 + calcGD3TagBodySize(this._obj.gd3tag);
-    } else {
-      this._obj.offsets.gd3 = 0;
-      this._obj.offsets.eof = this._obj.offsets.data + this._obj.data.byteLength;
+  setVersionCode(code: number) {
+    if (this._obj.version.code != code) {
+      this._obj.version.code = code;
+      this._obj.version.major = (code >> 8).toString(16);
+      this._obj.version.minor = ("0" + (code & 0xff).toString(16)).slice(-2);
+      updateOffsets(this._obj);
     }
   }
-
   get version(): VersionObject {
     return this._obj.version;
-  }
-  set version(value: VersionObject) {
-    this._obj.version = { ...value };
   }
   get offsets(): OffsetsObject {
     return this._obj.offsets;
@@ -93,8 +88,9 @@ export class VGM implements VGMObject {
   }
   set gd3tag(value: GD3TagObject | undefined) {
     this._obj.gd3tag = deepCloneGD3TagObject(value);
-    this._updateEOFOffset();
+    updateOffsets(this._obj);
   }
+
   get extraHeader(): ExtraHeaderObject | undefined {
     return this._obj.extraHeader;
   }
@@ -126,10 +122,12 @@ export class VGM implements VGMObject {
 
   /**
    * build VGM binary
-   * @param opts.compress compress vgm data (.vgz)
+   * @param opts.allowInconsistentOffsets Allow inconsistency of offsets (EOF, Data, GD3 and Extra Header Offsets). Set this parameter `true` if all offsets value are set manually.
+   * @param opts.compress `true` to compress the resulting vgm data.
+   * @return an ArrayBuffer which contains vgm data binary.
    */
-  build(opts: { compress?: boolean } = {}): ArrayBuffer {
-    return buildVGM(this, opts.compress);
+  build(opts: { allowInconsistentOffsets?: boolean; compress?: boolean } = {}): ArrayBuffer {
+    return buildVGM(this, opts);
   }
 
   /**
@@ -161,7 +159,7 @@ export class VGM implements VGMObject {
       total: totalSamples,
       loop: loopSamples
     };
-    this._updateEOFOffset();
+    updateOffsets(this._obj);
   }
 
   toJSON() {

@@ -801,7 +801,8 @@ export class VGMWriteDataCommand extends VGMCommand {
       return new VGMWriteDataCommand({ cmd, index, port: 0, addr: addr & 0x7f, data: buf[offset + 2] });
     } else if ((0x51 <= cmd && cmd <= 0x5f) || (0xa1 <= cmd && cmd <= 0xaf)) {
       const index = (cmd & 0xf0) === 0x50 ? 0 : 1;
-      const port = 0 <= [0x3, 0x7, 0x9, 0xf].indexOf(cmd & 0x0f) ? 1 : 0;
+      const dev = cmd & 0xf;
+      const port = dev === 0x3 || dev === 0x7 || dev === 0x9 || dev === 0xf ? 1 : 0;
       return new VGMWriteDataCommand({ cmd, index, port, addr: buf[offset + 1], data: buf[offset + 2] });
     } else if (0xb0 <= cmd && cmd <= 0xbf) {
       const addr = buf[offset + 1];
