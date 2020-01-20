@@ -1,6 +1,5 @@
-# vgm-parser
-
-[![npm version](https://badge.fury.io/js/vgm-parser.svg)](https://badge.fury.io/js/vgm-parser)
+# vgm-parser [![npm version](https://badge.fury.io/js/vgm-parser.svg)](https://badge.fury.io/js/vgm-parser)
+<img src="https://nodei.co/npm/vgm-parser.png?downloads=true&stars=true" alt=""/>
 
 VGM parser / builder module for JavaScript. [Demo Site](https://digital-sound-antiques.github.io/vgm-parser/)
 
