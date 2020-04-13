@@ -15,7 +15,7 @@ import {
   chipIdToName
 } from "./vgm_object";
 
-require("util"); // for node.js: load TextDecoder globally.
+const TextDecoder = require("util").TextDecoder; // for node.js: load TextDecoder.
 
 const { Zlib } = require("zlibjs/bin/gunzip.min.js");
 

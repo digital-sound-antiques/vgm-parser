@@ -1,6 +1,6 @@
 {
   "name": "vgm-parser",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "description": "VGM file parser",
   "main": "dist/index.js",
   "files": [
@@ -21,6 +21,10 @@
     "type": "git",
     "url": "https://github.com/digital-sound-antiques/vgm-parser.git"
   },
+  "dependencies": {
+    "util": "^0.12.1",
+    "zlibjs": "^0.3.1"
+  },
   "devDependencies": {
     "@types/jest": "^24.0.25",
     "@types/node": "^12.12.12",
@@ -34,9 +38,7 @@
     "tslint-plugin-prettier": "^2.0.1",
     "typedoc": "^0.15.2",
     "typescript": "^3.4.5",
-    "util": "^0.12.1",
     "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10",
-    "zlibjs": "^0.3.1"
+    "webpack-cli": "^3.3.10"
   }
 }
