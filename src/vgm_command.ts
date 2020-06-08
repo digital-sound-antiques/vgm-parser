@@ -1324,7 +1324,7 @@ export function parseVGMCommand(buf: ArrayLike<number>, offset: number): VGMComm
   if (offset < buf.length) {
     throw new Error(`Parse Error:: 0x${buf[offset].toString(16)}`);
   }
-  throw new Error(`Parse Error:: offset is out of range.`);
+  throw new Error(`Parse Error:: offset is out of range (may be missing VGM end command).`);
 }
 
 export function fromVGMCommandObject(obj: VGMCommandObject): VGMCommand {

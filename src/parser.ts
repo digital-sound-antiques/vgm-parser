@@ -15,7 +15,19 @@ import {
   chipIdToName
 } from "./vgm_object";
 
-const TextDecoder = require("util").TextDecoder; // for node.js: load TextDecoder.
+const isNode =
+  typeof process !== 'undefined' &&
+  process.versions != null &&
+  process.versions.node != null;
+
+function _decodeAsUtf16(buf: Uint8Array) {
+  if (isNode) {
+    const TextDecoder = require("util").TextDecoder; // for node.js: load TextDecoder.
+    return new TextDecoder("utf-16").decode(buf);
+  } else {
+    return new TextDecoder("utf-16").decode(buf);
+  }
+}
 
 const { Zlib } = require("zlibjs/bin/gunzip.min.js");
 
@@ -277,7 +289,7 @@ function parseNullTerminatedTextBlock(d: DataView, offset: number): string[] {
   while (index < d.byteLength) {
     const ch = d.getUint16(index);
     if (ch === 0) {
-      const slice = new TextDecoder("utf-16").decode(new Uint8Array(d.buffer, pos + d.byteOffset, index - pos));
+      const slice = _decodeAsUtf16(new Uint8Array(d.buffer, pos + d.byteOffset, index - pos));
       result.push(slice);
       index += 2;
       pos = index;
@@ -378,6 +390,11 @@ function ensureGunzipped(data: ArrayBuffer): ArrayBuffer {
 export function parseVGM(input: ArrayBuffer): VGMObject {
   const data = ensureGunzipped(input);
   const d = new DataView(data);
+
+  const magic = d.getUint32(0x00, true);
+  if (magic != 0x206d6756) {
+    throw new Error('Not a VGM data.');
+  }
 
   const version = d.getUint32(0x08, true);
   const chips: ChipsObject = {
