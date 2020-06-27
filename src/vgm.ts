@@ -11,7 +11,8 @@ import {
   GD3TagObject,
   createEmptyVGMObject,
   ExtraHeaderObject,
-  updateOffsets
+  updateOffsets,
+  deepCloneExtraHeaderObject
 } from "./vgm_object";
 import { parseVGM } from "./parser";
 import { buildVGM } from "./builder";
@@ -94,6 +95,11 @@ export class VGM implements VGMObject {
   get extraHeader(): ExtraHeaderObject | undefined {
     return this._obj.extraHeader;
   }
+  set extraHeader(value: ExtraHeaderObject | undefined) {
+    this._obj.extraHeader = deepCloneExtraHeaderObject(value);
+    updateOffsets(this._obj);
+  }
+
   constructor(arg?: VGMObject | null) {
     if (arg) {
       this._obj = deepCloneVGMObject(arg);
