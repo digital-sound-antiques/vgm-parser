@@ -742,11 +742,11 @@ export class VGMWriteDataCommand extends VGMCommand {
       res[2] = this.data;
       return res;
     } else if (0xc0 <= this.cmd && this.cmd <= 0xc2) {
-      setUint16LE(res, 1, this.addr | this.index ? 0x8000 : 0);
+      setUint16LE(res, 1, this.addr | (this.index ? 0x8000 : 0));
       res[3] = this.data;
       return res;
     } else if (0xc3 === this.cmd) {
-      res[1] = this.addr | this.index ? 0x80 : 0;
+      res[1] = this.addr | (this.index ? 0x80 : 0);
       setUint16LE(res, 2, this.data);
       return res;
     } else if (0xc4 === this.cmd) {
@@ -754,24 +754,24 @@ export class VGMWriteDataCommand extends VGMCommand {
       res[3] = this.addr;
       return res;
     } else if (0xc5 <= this.cmd && this.cmd <= 0xc8) {
-      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | (this.index ? 0x8000 : 0));
       res[3] = this.data;
       return res;
     } else if (0xd0 <= this.cmd && this.cmd <= 0xd2) {
-      res[1] = this.port | this.index ? 0x80 : 0;
+      res[1] = this.port | (this.index ? 0x80 : 0);
       res[2] = this.addr;
       res[3] = this.data;
       return res;
     } else if (0xd3 <= this.cmd && this.cmd <= 0xd5) {
-      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | (this.index ? 0x8000 : 0));
       res[3] = this.data;
       return res;
     } else if (0xd6 === this.cmd) {
-      res[1] = this.addr | this.index ? 0x80 : 0;
+      res[1] = this.addr | (this.index ? 0x80 : 0);
       setUint16BE(res, 2, this.data);
       return res;
     } else if (0xe1 === this.cmd) {
-      setUint16BE(res, 1, this.addr | this.index ? 0x8000 : 0);
+      setUint16BE(res, 1, this.addr | (this.index ? 0x8000 : 0));
       setUint16BE(res, 3, this.data);
       return res;
     } else {
