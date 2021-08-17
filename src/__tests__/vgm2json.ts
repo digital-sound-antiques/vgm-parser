@@ -9,7 +9,7 @@ function toArrayBuffer(b: Buffer) {
 try {
   const buf = fs.readFileSync(process.argv[2]);
   const vgm = VGM.parse(toArrayBuffer(buf));
-  console.log(vgm);
+  console.log(JSON.stringify(vgm, null, '  '));
 } catch (e) {
   console.error(e);
 }

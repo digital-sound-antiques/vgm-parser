@@ -436,61 +436,72 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
   }
 
   if (version >= 0x151) {
-    chips.segaPcm = getParamsSegaPcm(d);
-    chips.rf5c68 = getParamsCommon(d, 0x40);
-    chips.ym2203 = getParamsYm2203(d);
-    chips.ym2608 = getParamsYm2608(d);
-    chips.ym2610 = getParamsYm2610(d);
+    chips.segaPcm = getParamsSegaPcm(d); // 0x38
 
-    chips.ym3812 = getParamsCommon(d, 0x50);
-    chips.ym3526 = getParamsCommon(d, 0x54);
-    chips.y8950 = getParamsCommon(d, 0x58);
-    chips.ymf262 = getParamsCommon(d, 0x5c);
-    chips.ymf278b = getParamsCommon(d, 0x60);
-    chips.ymf271 = getParamsCommon(d, 0x64);
-    chips.ymz280b = getParamsCommon(d, 0x68);
-    chips.rf5c164 = getParamsCommon(d, 0x6c);
-    chips.pwm = getParamsCommon(d, 0x70);
-    chips.ay8910 = getParamsAy8910(d);
-    vgm.loopModifier = d.getUint8(0x7f);
+    if (0x80 <= vgm.offsets.data) {
+      chips.rf5c68 = getParamsCommon(d, 0x40);
+      chips.ym2203 = getParamsYm2203(d);
+      chips.ym2608 = getParamsYm2608(d);
+      chips.ym2610 = getParamsYm2610(d);
+
+      chips.ym3812 = getParamsCommon(d, 0x50);
+      chips.ym3526 = getParamsCommon(d, 0x54);
+      chips.y8950 = getParamsCommon(d, 0x58);
+      chips.ymf262 = getParamsCommon(d, 0x5c);
+      chips.ymf278b = getParamsCommon(d, 0x60);
+      chips.ymf271 = getParamsCommon(d, 0x64);
+      chips.ymz280b = getParamsCommon(d, 0x68);
+      chips.rf5c164 = getParamsCommon(d, 0x6c);
+      chips.pwm = getParamsCommon(d, 0x70);
+      chips.ay8910 = getParamsAy8910(d);
+      vgm.loopModifier = d.getUint8(0x7f);
+    }
   }
 
   if (version >= 0x160) {
-    vgm.volumeModifier = d.getUint8(0x7c);
-    vgm.loopBase = d.getUint8(0x7e);
+    if (0x80 <= vgm.offsets.data) {
+      vgm.volumeModifier = d.getUint8(0x7c);
+      vgm.loopBase = d.getUint8(0x7e);
+    }
   }
 
   if (version >= 0x161) {
-    chips.gameBoyDmg = getParamsCommon(d, 0x80);
-    chips.nesApu = getParamsNesApu(d);
-    chips.multiPcm = getParamsCommon(d, 0x88);
-    chips.upd7759 = getParamsCommon(d, 0x8c);
-    chips.okim6258 = getParamsCommonWithFlags(d, 0x90, 0x94);
-    chips.c140 = getParamsC140(d);
-    chips.okim6295 = getParamsCommon(d, 0x98);
-    chips.k051649 = getParamsCommon(d, 0x9c);
-    chips.k054539 = getParamsCommonWithFlags(d, 0xa0, 0x95);
-    chips.huc6280 = getParamsCommon(d, 0xa4);
-    chips.k053260 = getParamsCommon(d, 0xac);
-    chips.pokey = getParamsCommon(d, 0xb0);
-    chips.qsound = getParamsCommon(d, 0xb4);
+    if (0xb8 <= vgm.offsets.data) {
+      chips.gameBoyDmg = getParamsCommon(d, 0x80);
+      chips.nesApu = getParamsNesApu(d);
+      chips.multiPcm = getParamsCommon(d, 0x88);
+      chips.upd7759 = getParamsCommon(d, 0x8c);
+      chips.okim6258 = getParamsCommonWithFlags(d, 0x90, 0x94);
+      chips.c140 = getParamsC140(d);
+      chips.okim6295 = getParamsCommon(d, 0x98);
+      chips.k051649 = getParamsCommon(d, 0x9c);
+      chips.k054539 = getParamsCommonWithFlags(d, 0xa0, 0x95);
+      chips.huc6280 = getParamsCommon(d, 0xa4);
+      chips.k053260 = getParamsCommon(d, 0xac);
+      chips.pokey = getParamsCommon(d, 0xb0);
+      chips.qsound = getParamsCommon(d, 0xb4);
+    }
   }
 
   if (version >= 0x170) {
-    const v = d.getUint32(0xbc, true);
-    vgm.offsets.extraHeader = v ? 0xbc + v : 0;
+    if (0xc0 <= vgm.offsets.data) {
+      const v = d.getUint32(0xbc, true);
+      vgm.offsets.extraHeader = v ? 0xbc + v : 0;
+    }
   }
 
   if (version >= 0x171) {
-    chips.scsp = getParamsCommon(d, 0xb8);
-    chips.wonderSwan = getParamsCommon(d, 0xc0);
-    chips.vsu = getParamsCommon(d, 0xc4);
-    chips.saa1099 = getParamsCommon(d, 0xc8);
-    chips.es5506 = getParamsEs5506(d);
-    chips.es5503 = getParamsEs5503(d);
-    chips.x1_010 = getParamsCommon(d, 0xd8);
-    chips.c352 = getParamsC352(d);
-    chips.ga20 = getParamsCommon(d, 0xe0);
+    if (0xe8 <= vgm.offsets.data) {
+      chips.scsp = getParamsCommon(d, 0xb8);
+      chips.wonderSwan = getParamsCommon(d, 0xc0);
+      chips.vsu = getParamsCommon(d, 0xc4);
+      chips.saa1099 = getParamsCommon(d, 0xc8);
+      chips.es5506 = getParamsEs5506(d);
+      chips.es5503 = getParamsEs5503(d);
+      chips.x1_010 = getParamsCommon(d, 0xd8);
+      chips.c352 = getParamsC352(d);
+      chips.ga20 = getParamsCommon(d, 0xe0);
+    }
   }
 
   for (const key in chips) {
@@ -501,10 +512,11 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
 
   let extraHeader;
   if (vgm.offsets.extraHeader) {
-    // Note: Snooze Tracker creates .vgm which has extra header offset but no extra data exists.
     const extraData = data.slice(vgm.offsets.extraHeader);
     if (4 <= extraData.byteLength) {
       extraHeader = parseExtraHeader(extraData);
+    } else {
+      // extra header is corrupted.
     }
   }
 
