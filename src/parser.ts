@@ -432,7 +432,10 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
   }
 
   if (version >= 0x150) {
-    vgm.offsets.data = 0x34 + d.getUint32(0x34, true);
+    const offset = d.getUint32(0x34, true);
+    if (offset > 0) {
+      vgm.offsets.data = 0x34 + offset;
+    }
   }
 
   if (version >= 0x151) {
