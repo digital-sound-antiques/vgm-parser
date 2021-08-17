@@ -499,7 +499,15 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
     }
   }
 
-  const extraHeader = vgm.offsets.extraHeader ? parseExtraHeader(data.slice(vgm.offsets.extraHeader)) : undefined;
+  let extraHeader;
+  if (vgm.offsets.extraHeader) {
+    // Note: Snooze Tracker creates .vgm which has extra header offset but no extra data exists.
+    const extraData = data.slice(vgm.offsets.extraHeader);
+    if (4 <= extraData.byteLength) {
+      extraHeader = parseExtraHeader(extraData);
+    }
+  }
+
   const gd3tag = vgm.offsets.gd3 ? parseGD3(data.slice(vgm.offsets.gd3)) : undefined;
 
   return {
