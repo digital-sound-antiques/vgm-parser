@@ -1,3 +1,18 @@
+# v0.9.4
+- Fix the crash problem if data offset is not specified in VGM header.
+
+# v0.9.3
+- Support VGM v1.51 file that contains legacy data offset 0x40.
+- Fix the problem where the parser crashes when .vgm created with Snooze Tracker.
+
+# v0.9.0
+- Add setter function for extra headers.
+
+# v0.8.6
+- Add vgm header validation.
+- Resolve reference error of TextDecoder on browser.
+- npm audit fix
+
 # v0.8.3
 - Support building VGM files version less than 1.71.
 - Adjust offsets in header before build.
