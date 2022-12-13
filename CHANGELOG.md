@@ -1,3 +1,6 @@
+# v0.9.5
+- Prevent crashes when GD3 tag is malformed.
+
 # v0.9.4
 - Fix the crash problem if data offset is not specified in VGM header.
 

@@ -361,18 +361,18 @@ function parseGD3(data: ArrayBuffer): GD3TagObject {
   return {
     version,
     size,
-    trackTitle: texts[0],
-    gameName: texts[2],
-    system: texts[4],
-    composer: texts[6],
-    releaseDate: texts[8],
-    vgmBy: texts[9],
-    notes: texts[10],
+    trackTitle: texts[0] ?? '',
+    gameName: texts[2] ?? '',
+    system: texts[4] ?? '',
+    composer: texts[6] ?? '',
+    releaseDate: texts[8] ?? '',
+    vgmBy: texts[9] ?? '',
+    notes: texts[10] ?? '',
     japanese: {
-      trackTitle: texts[1],
-      gameName: texts[3],
-      system: texts[5],
-      composer: texts[7]
+      trackTitle: texts[1] ?? '',
+      gameName: texts[3] ?? '',
+      system: texts[5] ?? '',
+      composer: texts[7] ?? ''
     }
   };
 }
