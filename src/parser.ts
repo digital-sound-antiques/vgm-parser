@@ -12,24 +12,22 @@ import {
   ExtraHeaderObject,
   ExtraChipClockObject,
   ExtraChipVolumeObject,
-  chipIdToName
+  chipIdToName,
 } from "./vgm_object";
 
-const isNode =
-  typeof process !== 'undefined' &&
-  process.versions != null &&
-  process.versions.node != null;
+import { gunzipSync } from "fflate";
+
+const isNode = typeof process !== "undefined" && process.versions != null && process.versions.node != null;
 
 function _decodeAsUtf16(buf: Uint8Array) {
   if (isNode) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const TextDecoder = require("util").TextDecoder; // for node.js: load TextDecoder.
     return new TextDecoder("utf-16").decode(buf);
   } else {
     return new TextDecoder("utf-16").decode(buf);
   }
 }
-
-const { Zlib } = require("zlibjs/bin/gunzip.min.js");
 
 /** @hidden */
 function getParamsCommon(d: DataView, clockIndex: number) {
@@ -58,7 +56,7 @@ function getParamsSn76489(d: DataView) {
       ...obj,
       feedback: d.getUint16(0x28, true),
       shiftRegisterWidth: d.getUint8(0x2a),
-      t6w28
+      t6w28,
     };
   }
   return undefined;
@@ -70,7 +68,7 @@ function getParamsSegaPcm(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      interfaceRegister: d.getUint32(0x3c, true)
+      interfaceRegister: d.getUint32(0x3c, true),
     };
   }
   return undefined;
@@ -86,8 +84,8 @@ function getParamsYm2151(d: DataView) {
       clock: obj.clock & 0x7fffffff,
       chipType: {
         value: t,
-        name: t ? "YM2164" : "YM2151"
-      }
+        name: t ? "YM2164" : "YM2151",
+      },
     };
   }
   return undefined;
@@ -99,7 +97,7 @@ function getParamsYm2203(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      ssgFlags: d.getUint8(0x7a)
+      ssgFlags: d.getUint8(0x7a),
     };
   }
   return undefined;
@@ -111,7 +109,7 @@ function getParamsYm2608(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      ssgFlags: d.getUint8(0x7b)
+      ssgFlags: d.getUint8(0x7b),
     };
   }
   return undefined;
@@ -127,8 +125,8 @@ function getParamsYm2610(d: DataView) {
       clock: obj.clock & 0x7fffffff,
       chipType: {
         value: t,
-        name: t ? "YM2610" : "YM2610B"
-      }
+        name: t ? "YM2610" : "YM2610B",
+      },
     };
   }
   return undefined;
@@ -144,8 +142,8 @@ function getParamsYm2612(d: DataView) {
       clock: obj.clock & 0x7fffffff,
       chipType: {
         value: t,
-        name: t ? "YM3438" : "YM2612"
-      }
+        name: t ? "YM3438" : "YM2612",
+      },
     };
   }
   return undefined;
@@ -157,7 +155,7 @@ function getParamsNesApu(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      fds: d.getUint8(0x84) & 0x80 ? true : false
+      fds: d.getUint8(0x84) & 0x80 ? true : false,
     };
   }
   return undefined;
@@ -169,7 +167,7 @@ function getParamsEs5503(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      numberOfChannels: d.getUint8(0xd4)
+      numberOfChannels: d.getUint8(0xd4),
     };
   }
   return undefined;
@@ -185,9 +183,9 @@ function getParamsEs5506(d: DataView) {
       clock: obj.clock & 0x7fffffff,
       chipType: {
         value: t,
-        name: t ? "ES5506" : "ES5505"
+        name: t ? "ES5506" : "ES5505",
       },
-      numberOfChannels: d.getUint8(0xd5)
+      numberOfChannels: d.getUint8(0xd5),
     };
   }
   return undefined;
@@ -224,9 +222,9 @@ function getParamsAy8910(d: DataView) {
             default:
               return "UNKNOWN";
           }
-        })(t)
+        })(t),
       },
-      flags
+      flags,
     };
   }
   return undefined;
@@ -252,8 +250,8 @@ function getParamsC140(d: DataView) {
             default:
               return "UNKNOWN";
           }
-        })(t)
-      }
+        })(t),
+      },
     };
   }
   return undefined;
@@ -265,7 +263,7 @@ function getParamsC352(d: DataView) {
   if (obj) {
     return {
       ...obj,
-      clockDivider: d.getUint8(0xd6)
+      clockDivider: d.getUint8(0xd6),
     };
   }
   return undefined;
@@ -276,7 +274,7 @@ function toVersionObject(code: number): VersionObject {
   const result = {
     code,
     major: (code >> 8).toString(16),
-    minor: ("0" + (code & 0xff).toString(16)).slice(-2)
+    minor: ("0" + (code & 0xff).toString(16)).slice(-2),
   };
   return result;
 }
@@ -342,7 +340,7 @@ function parseExtraHeader(data: ArrayBuffer): ExtraHeaderObject {
   }
   return {
     clocks,
-    volumes
+    volumes,
   };
 }
 
@@ -361,28 +359,27 @@ function parseGD3(data: ArrayBuffer): GD3TagObject {
   return {
     version,
     size,
-    trackTitle: texts[0] ?? '',
-    gameName: texts[2] ?? '',
-    system: texts[4] ?? '',
-    composer: texts[6] ?? '',
-    releaseDate: texts[8] ?? '',
-    vgmBy: texts[9] ?? '',
-    notes: texts[10] ?? '',
+    trackTitle: texts[0] ?? "",
+    gameName: texts[2] ?? "",
+    system: texts[4] ?? "",
+    composer: texts[6] ?? "",
+    releaseDate: texts[8] ?? "",
+    vgmBy: texts[9] ?? "",
+    notes: texts[10] ?? "",
     japanese: {
-      trackTitle: texts[1] ?? '',
-      gameName: texts[3] ?? '',
-      system: texts[5] ?? '',
-      composer: texts[7] ?? ''
-    }
+      trackTitle: texts[1] ?? "",
+      gameName: texts[3] ?? "",
+      system: texts[5] ?? "",
+      composer: texts[7] ?? "",
+    },
   };
 }
 
 function ensureGunzipped(data: ArrayBuffer): ArrayBuffer {
   const ua = new Uint8Array(data);
   if (ua[0] === 0x1f && ua[1] === 0x8b) {
-    const unzip = new Zlib.Gunzip(ua);
-    const plain: Uint8Array = unzip.decompress();
-    return plain.buffer.slice(plain.byteOffset, plain.byteOffset + plain.byteLength);
+    const res = gunzipSync(ua);
+    return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);
   }
   return data;
 }
@@ -393,13 +390,13 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
 
   const magic = d.getUint32(0x00, true);
   if (magic != 0x206d6756) {
-    throw new Error('Not a VGM data.');
+    throw new Error("Not a VGM data.");
   }
 
   const version = d.getUint32(0x08, true);
   const chips: ChipsObject = {
     sn76489: getParamsSn76489(d),
-    ym2413: getParamsCommon(d, 0x10)
+    ym2413: getParamsCommon(d, 0x10),
   };
 
   const eof = d.getUint32(0x04, true);
@@ -413,17 +410,17 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
       gd3: gd3 ? 0x14 + gd3 : 0,
       loop: loop ? 0x1c + loop : 0,
       data: 0x40,
-      extraHeader: 0
+      extraHeader: 0,
     },
     samples: {
       total: d.getUint32(0x18, true),
-      loop: d.getUint32(0x20, true)
+      loop: d.getUint32(0x20, true),
     },
     rate: d.getUint32(0x24, true),
     chips,
     loopModifier: 0,
     loopBase: 0,
-    volumeModifier: 0
+    volumeModifier: 0,
   };
 
   if (version >= 0x110) {
@@ -529,6 +526,6 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
     ...vgm,
     extraHeader,
     data: data.slice(vgm.offsets.data),
-    gd3tag
+    gd3tag,
   };
 }

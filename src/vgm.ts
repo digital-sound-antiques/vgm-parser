@@ -12,7 +12,7 @@ import {
   createEmptyVGMObject,
   ExtraHeaderObject,
   updateOffsets,
-  deepCloneExtraHeaderObject
+  deepCloneExtraHeaderObject,
 } from "./vgm_object";
 import { parseVGM } from "./parser";
 import { buildVGM } from "./builder";
@@ -163,7 +163,7 @@ export class VGM implements VGMObject {
     this._obj.offsets.loop = 0 < loopSamples ? this._obj.offsets.data + loopByteOffset : 0;
     this._obj.samples = {
       total: totalSamples,
-      loop: loopSamples
+      loop: loopSamples,
     };
     updateOffsets(this._obj);
   }
@@ -179,7 +179,7 @@ export class VGM implements VGMObject {
  * @param sampleRate base sample rate
  */
 export function formatMinSec(samples: number, sampleRate: number = 44100): string {
-  let millis = Math.round((samples / sampleRate) * 1000);
+  const millis = Math.round((samples / sampleRate) * 1000);
   const minutes = Math.floor(millis / 60000);
   const seconds = Math.floor((millis - minutes * 60000) / 1000);
   const decimillis = Math.round((millis - seconds * 1000) / 10);

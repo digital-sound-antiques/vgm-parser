@@ -1,0 +1,7 @@
+dist
+docs
+demo
+node_modules
+
+*.config.js
+typedoc.js

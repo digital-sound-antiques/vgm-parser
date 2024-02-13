@@ -14,3 +14,5 @@ node_modules
 dist
 docs
 demo/bundle.js
+
+!src/__tests__/test.vgm

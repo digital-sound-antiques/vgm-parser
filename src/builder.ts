@@ -9,7 +9,7 @@ import {
 } from "./vgm_object";
 import { VGMCommand } from "./vgm_command";
 
-const { Zlib } = require("zlibjs/bin/gzip.min.js");
+import { gzipSync } from "fflate";
 
 export class AutoResizeBuffer {
   _buf: ArrayBuffer;
@@ -354,7 +354,7 @@ function _writeExtraChipVolumes(
 }
 
 function _writeExtraHeader(buf: AutoResizeBuffer, byteOffset: number, header: ExtraHeaderObject): number {
-  let headerSize = header.volumes ? 12 : 8;
+  const headerSize = header.volumes ? 12 : 8;
   buf.setUint32LE(byteOffset, headerSize);
   let clockPartSize = 0;
   let volumePartSize = 0;
@@ -415,8 +415,7 @@ export function buildVGM(
   }
 
   if (opts.compress) {
-    const gzip = new Zlib.Gzip(new Uint8Array(buf.toArrayBuffer()));
-    const res: Uint8Array = gzip.compress();
+    const res = gzipSync(new Uint8Array(buf.toArrayBuffer()));
     return res.buffer.slice(res.byteOffset, res.byteOffset + res.byteLength);
   }
   return buf.toArrayBuffer();

@@ -276,29 +276,34 @@ export abstract class VGMCommand implements VGMCommandObject {
   abstract toUint8Array(): Uint8Array;
   abstract toObject(): VGMCommandObject;
   abstract clone(): VGMCommand;
-  abstract copy(arg: Object): VGMCommand;
+  abstract copy(arg: unknown): VGMCommand;
   toJSON() {
     return this.toObject();
   }
 }
 
+export type VGMDataBlockCommandArgs = {
+  blockType: number;
+  blockSize: number;
+  blockData: Uint8Array;
+};
 export class VGMDataBlockCommand extends VGMCommand {
   blockType: number;
   blockSize: number;
   blockData: Uint8Array;
 
-  constructor(arg: { blockType: number; blockSize: number; blockData: Uint8Array }) {
+  constructor(args: VGMDataBlockCommandArgs) {
     super(0x67);
-    this.blockType = arg.blockType;
-    this.blockSize = arg.blockSize;
-    this.blockData = arg.blockData;
+    this.blockType = args.blockType;
+    this.blockSize = args.blockSize;
+    this.blockData = args.blockData;
   }
 
-  copy(arg: { blockType?: number; blockSize?: number; blockData?: Uint8Array }): VGMDataBlockCommand {
+  copy(args: Partial<VGMDataBlockCommandArgs>): VGMDataBlockCommand {
     return new VGMDataBlockCommand({
-      blockType: arg.blockType != null ? arg.blockType : this.blockType,
-      blockSize: arg.blockSize != null ? arg.blockSize : this.blockSize,
-      blockData: arg.blockData != null ? arg.blockData.slice(0) : this.blockData.slice(0),
+      blockType: args.blockType ?? this.blockType,
+      blockSize: args.blockSize ?? this.blockSize,
+      blockData: args.blockData?.slice(0) ?? this.blockData.slice(0),
     });
   }
 
@@ -353,7 +358,7 @@ export class VGMDataBlockCommand extends VGMCommand {
   static fromObject(obj: VGMCommandObject): VGMDataBlockCommand | null {
     if (obj.cmd === 0x67) {
       if (obj.blockType != null && obj.blockData != null && obj.blockSize != null) {
-        return new VGMDataBlockCommand(obj as any);
+        return new VGMDataBlockCommand(obj as VGMDataBlockCommandArgs);
       } else {
         throw new Error(`Can't create VGMDataBlockCommand: required parameter is missing.`);
       }
@@ -367,7 +372,8 @@ export class VGMEndCommand extends VGMCommand {
     super(0x66);
   }
 
-  copy(arg: Object): VGMEndCommand {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  copy(args: unknown): VGMEndCommand {
     return new VGMEndCommand();
   }
 
@@ -447,15 +453,19 @@ export abstract class VGMWaitCommand extends VGMCommand {
   }
 }
 
+export type VGMWaitWordCommandArgs = {
+  count: number;
+};
+
 export class VGMWaitWordCommand extends VGMWaitCommand {
-  constructor(arg: { count: number }) {
-    super(0x61, arg.count);
-    if (arg.count < 0 || 65535 < arg.count) {
-      throw new Error(`Count overflow: ${arg.count}`);
+  constructor(args: VGMWaitWordCommandArgs) {
+    super(0x61, args.count);
+    if (args.count < 0 || 65535 < args.count) {
+      throw new Error(`Count overflow: ${args.count}`);
     }
   }
-  copy(arg: { count?: number }) {
-    return new VGMWaitWordCommand({ count: arg.count != null ? arg.count : this.count });
+  copy(args: Partial<VGMWaitWordCommandArgs>) {
+    return new VGMWaitWordCommand({ count: args.count ?? this.count });
   }
   clone(): VGMWaitWordCommand {
     return this.copy({});
@@ -479,15 +489,19 @@ export class VGMWaitWordCommand extends VGMWaitCommand {
   }
 }
 
+export type VGMWaitNibbleCommandArgs = {
+  count: number;
+};
+
 export class VGMWaitNibbleCommand extends VGMWaitCommand {
-  constructor(arg: { count: number }) {
-    super(0x70 | ((arg.count - 1) & 15), arg.count);
-    if (arg.count < 1 || 16 < arg.count) {
-      throw new Error(`Invalid count: ${arg.count}`);
+  constructor(args: VGMWaitNibbleCommandArgs) {
+    super(0x70 | ((args.count - 1) & 15), args.count);
+    if (args.count < 1 || 16 < args.count) {
+      throw new Error(`Invalid count: ${args.count}`);
     }
   }
-  copy(arg: { count?: number }) {
-    return new VGMWaitNibbleCommand({ count: arg.count != null ? arg.count : this.count });
+  copy(args: Partial<VGMWaitNibbleCommandArgs>) {
+    return new VGMWaitNibbleCommand({ count: args.count ?? this.count });
   }
   clone(): VGMWaitNibbleCommand {
     return this.copy({});
@@ -511,7 +525,8 @@ export class VGMWait735Command extends VGMWaitCommand {
   constructor() {
     super(0x62, 735);
   }
-  copy(arg: {}): VGMWait735Command {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  copy(args: unknown): VGMWait735Command {
     return new VGMWait735Command();
   }
   clone(): VGMWait735Command {
@@ -536,7 +551,8 @@ export class VGMWait882Command extends VGMWaitCommand {
   constructor() {
     super(0x63, 882);
   }
-  copy(arg: {}): VGMWait882Command {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  copy(args: unknown): VGMWait882Command {
     return new VGMWait882Command();
   }
   clone(): VGMWait882Command {
@@ -557,16 +573,20 @@ export class VGMWait882Command extends VGMWaitCommand {
   }
 }
 
+export type VGMWrite2ACommandArgs = {
+  count: number;
+};
+
 export class VGMWrite2ACommand extends VGMCommand {
-  constructor(arg: { count: number }) {
-    super(0x80 | (arg.count & 15));
-    if (arg.count < 0 || 15 < arg.count) {
-      throw new Error(`Invalid count ${arg.count} for VGMWrite2ACommand.`);
+  constructor(args: VGMWrite2ACommandArgs) {
+    super(0x80 | (args.count & 15));
+    if (args.count < 0 || 15 < args.count) {
+      throw new Error(`Invalid count ${args.count} for VGMWrite2ACommand.`);
     }
   }
 
-  copy(arg: { count?: number }): VGMWrite2ACommand {
-    return new VGMWrite2ACommand({ count: arg.count != null ? arg.count : this.count });
+  copy(args: Partial<VGMWrite2ACommand>): VGMWrite2ACommand {
+    return new VGMWrite2ACommand({ count: args.count ?? this.count });
   }
 
   clone(): VGMWrite2ACommand {
@@ -608,30 +628,32 @@ export class VGMWrite2ACommand extends VGMCommand {
   }
 }
 
+export type VGMPCMRAMWriteCommandArgs = {
+  blockType: number;
+  readOffset: number;
+  writeOffset: number;
+  writeSize: number;
+};
+
 export class VGMPCMRAMWriteCommand extends VGMCommand {
   blockType: number;
   readOffset: number;
   writeOffset: number; /* RAM offset to write */
   writeSize: number;
-  constructor(arg: { blockType: number; readOffset: number; writeOffset: number; writeSize: number }) {
+  constructor(args: VGMPCMRAMWriteCommandArgs) {
     super(0x68);
-    this.blockType = arg.blockType;
-    this.readOffset = arg.readOffset;
-    this.writeOffset = arg.writeOffset;
-    this.writeSize = arg.writeSize;
+    this.blockType = args.blockType;
+    this.readOffset = args.readOffset;
+    this.writeOffset = args.writeOffset;
+    this.writeSize = args.writeSize;
   }
 
-  copy(arg: {
-    blockType?: number;
-    readOffset?: number;
-    writeOffset?: number;
-    writeSize?: number;
-  }): VGMPCMRAMWriteCommand {
+  copy(args: Partial<VGMPCMRAMWriteCommandArgs>): VGMPCMRAMWriteCommand {
     return new VGMPCMRAMWriteCommand({
-      blockType: arg.blockType != null ? arg.blockType : this.blockType,
-      readOffset: arg.readOffset != null ? arg.readOffset : this.readOffset,
-      writeOffset: arg.writeOffset != null ? arg.writeOffset : this.writeOffset,
-      writeSize: arg.writeSize != null ? arg.writeSize : this.writeSize,
+      blockType: args.blockType ?? this.blockType,
+      readOffset: args.readOffset ?? this.readOffset,
+      writeOffset: args.writeOffset ?? this.writeOffset,
+      writeSize: args.writeSize ?? this.writeSize,
     });
   }
 
@@ -680,11 +702,19 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
       if (obj.blockType == null || obj.readOffset == null || obj.writeOffset == null || obj.writeSize == null) {
         throw new Error(`Can't create VGMPCMRAMWriteCommand: required parameter is missing.`);
       }
-      return new VGMPCMRAMWriteCommand(obj as any);
+      return new VGMPCMRAMWriteCommand(obj as VGMPCMRAMWriteCommandArgs);
     }
     return null;
   }
 }
+
+export type VGMWriteDataCommandArgs = {
+  cmd: number;
+  index?: number;
+  port?: number;
+  addr?: number;
+  data: number;
+};
 
 export class VGMWriteDataCommand extends VGMCommand {
   chip: ChipName;
@@ -693,13 +723,13 @@ export class VGMWriteDataCommand extends VGMCommand {
   addr: number;
   data: number;
   size: number;
-  constructor(arg: { cmd: number; index?: number; port?: number; addr?: number; data: number }) {
-    super(arg.cmd);
-    this.chip = commandToChipName(arg.cmd);
-    this.index = arg.index || 0;
-    this.port = arg.port || 0;
-    this.addr = arg.addr || 0;
-    this.data = arg.data;
+  constructor(args: VGMWriteDataCommandArgs) {
+    super(args.cmd);
+    this.chip = commandToChipName(args.cmd);
+    this.index = args.index || 0;
+    this.port = args.port || 0;
+    this.addr = args.addr || 0;
+    this.data = args.data;
     if ((0x30 <= this.cmd && this.cmd <= 0x3f) || this.cmd === 0x4f || this.cmd === 0x50) {
       this.size = 2;
     } else if (0x40 <= this.cmd && this.cmd <= 0x4e) {
@@ -717,13 +747,13 @@ export class VGMWriteDataCommand extends VGMCommand {
     }
   }
 
-  copy(arg: { cmd?: number; index?: number; port?: number; addr?: number; data?: number }): VGMWriteDataCommand {
+  copy(args: Partial<VGMWriteDataCommandArgs>): VGMWriteDataCommand {
     return new VGMWriteDataCommand({
-      cmd: arg.cmd != null ? arg.cmd : this.cmd,
-      index: arg.index != null ? arg.index : this.index,
-      port: arg.port != null ? arg.port : this.port,
-      addr: arg.addr != null ? arg.addr : this.addr,
-      data: arg.data != null ? arg.data : this.data,
+      cmd: args.cmd != null ? args.cmd : this.cmd,
+      index: args.index != null ? args.index : this.index,
+      port: args.port != null ? args.port : this.port,
+      addr: args.addr != null ? args.addr : this.addr,
+      data: args.data != null ? args.data : this.data,
     });
   }
 
@@ -865,7 +895,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       cmd === 0xe0 ||
       cmd === 0xe1
     ) {
-      return new VGMWriteDataCommand(obj as any);
+      return new VGMWriteDataCommand(obj as VGMWriteDataCommandArgs);
     }
     return null;
   }
@@ -879,23 +909,30 @@ export abstract class VGMStreamCommand extends VGMCommand {
   }
 }
 
+export type VGMSetupStreamCommandArgs = {
+  streamId: number;
+  type: number;
+  port: number;
+  channel: number;
+};
+
 export class VGMSetupStreamCommand extends VGMStreamCommand {
   type: number;
   port: number;
   channel: number;
-  constructor(arg: { streamId: number; type: number; port: number; channel: number }) {
-    super(0x90, arg.streamId);
-    this.type = arg.type;
-    this.port = arg.port;
-    this.channel = arg.channel;
+  constructor(args: VGMSetupStreamCommandArgs) {
+    super(0x90, args.streamId);
+    this.type = args.type;
+    this.port = args.port;
+    this.channel = args.channel;
   }
 
-  copy(arg: { streamId?: number; type?: number; port?: number; channel?: number }): VGMSetupStreamCommand {
+  copy(args: Partial<VGMSetupStreamCommandArgs>): VGMSetupStreamCommand {
     return new VGMSetupStreamCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      type: arg.type != null ? arg.type : this.type,
-      port: arg.port != null ? arg.port : this.port,
-      channel: arg.channel != null ? arg.channel : this.channel,
+      streamId: args.streamId ?? this.streamId,
+      type: args.type ?? this.type,
+      port: args.port ?? this.port,
+      channel: args.channel ?? this.channel,
     });
   }
 
@@ -943,29 +980,36 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
       if (obj.streamId == null || obj.type == null || obj.port == null || obj.channel == null) {
         throw new Error(`Can't create VGMSetupStreamCommand: required parameter is missing.`);
       }
-      return new VGMSetupStreamCommand(obj as any);
+      return new VGMSetupStreamCommand(obj as VGMSetupStreamCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMSetStreamDataCommandArgs = {
+  streamId: number;
+  dataBankId: number;
+  stepSize: number;
+  stepBase: number;
+};
+
 export class VGMSetStreamDataCommand extends VGMStreamCommand {
   dataBankId: number;
   stepSize: number;
   stepBase: number;
-  constructor(arg: { streamId: number; dataBankId: number; stepSize: number; stepBase: number }) {
-    super(0x91, arg.streamId);
-    this.dataBankId = arg.dataBankId;
-    this.stepSize = arg.stepSize;
-    this.stepBase = arg.stepBase;
+  constructor(args: VGMSetStreamDataCommandArgs) {
+    super(0x91, args.streamId);
+    this.dataBankId = args.dataBankId;
+    this.stepSize = args.stepSize;
+    this.stepBase = args.stepBase;
   }
 
-  copy(arg: { streamId?: number; dataBankId?: number; stepSize?: number; stepBase?: number }): VGMSetStreamDataCommand {
+  copy(args: Partial<VGMSetStreamDataCommandArgs>): VGMSetStreamDataCommand {
     return new VGMSetStreamDataCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      dataBankId: arg.dataBankId != null ? arg.dataBankId : this.dataBankId,
-      stepSize: arg.stepSize != null ? arg.stepSize : this.stepSize,
-      stepBase: arg.stepBase != null ? arg.stepBase : this.stepBase,
+      streamId: args.streamId ?? this.streamId,
+      dataBankId: args.dataBankId ?? this.dataBankId,
+      stepSize: args.stepSize ?? this.stepSize,
+      stepBase: args.stepBase ?? this.stepBase,
     });
   }
 
@@ -1013,22 +1057,27 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
       if (obj.streamId == null || obj.dataBankId == null || obj.stepBase == null || obj.stepSize == null) {
         throw new Error(`Can't create VGMSetStreamDataCommand: required parameter is missing.`);
       }
-      return new VGMSetStreamDataCommand(obj as any);
+      return new VGMSetStreamDataCommand(obj as VGMSetStreamDataCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMSetStreamFrequencyCommandArgs = {
+  streamId: number;
+  frequency: number;
+};
+
 export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
   frequency: number;
-  constructor(arg: { streamId: number; frequency: number }) {
-    super(0x92, arg.streamId);
-    this.frequency = arg.frequency;
+  constructor(args: VGMSetStreamFrequencyCommandArgs) {
+    super(0x92, args.streamId);
+    this.frequency = args.frequency;
   }
-  copy(arg: { streamId?: number; frequency?: number }): VGMSetStreamFrequencyCommand {
+  copy(args: Partial<VGMSetStreamFrequencyCommandArgs>): VGMSetStreamFrequencyCommand {
     return new VGMSetStreamFrequencyCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      frequency: arg.frequency != null ? arg.frequency : this.frequency,
+      streamId: args.streamId ?? this.streamId,
+      frequency: args.frequency ?? this.frequency,
     });
   }
   clone(): VGMSetStreamFrequencyCommand {
@@ -1068,28 +1117,35 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
       if (obj.streamId == null || obj.frequency == null) {
         throw new Error(`Can't create VGMSetStreamFrequencyCommand: required parameter is missing.`);
       }
-      return new VGMSetStreamFrequencyCommand(obj as any);
+      return new VGMSetStreamFrequencyCommand(obj as VGMSetStreamFrequencyCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMStartStreamCommandArgs = {
+  streamId: number;
+  offset: number;
+  lengthMode: number;
+  dataLength: number;
+};
+
 export class VGMStartStreamCommand extends VGMStreamCommand {
   offset: number;
   lengthMode: number;
   dataLength: number;
-  constructor(arg: { streamId: number; offset: number; lengthMode: number; dataLength: number }) {
-    super(0x93, arg.streamId);
-    this.offset = arg.offset;
-    this.lengthMode = arg.lengthMode;
-    this.dataLength = arg.dataLength;
+  constructor(args: VGMStartStreamCommandArgs) {
+    super(0x93, args.streamId);
+    this.offset = args.offset;
+    this.lengthMode = args.lengthMode;
+    this.dataLength = args.dataLength;
   }
-  copy(arg: { streamId?: number; offset?: number; lengthMode?: number; dataLength?: number }): VGMStartStreamCommand {
+  copy(args: Partial<VGMStartStreamCommandArgs>): VGMStartStreamCommand {
     return new VGMStartStreamCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      offset: arg.offset != null ? arg.offset : this.offset,
-      lengthMode: arg.lengthMode != null ? arg.lengthMode : this.lengthMode,
-      dataLength: arg.dataLength != null ? arg.dataLength : this.dataLength,
+      streamId: args.streamId ?? this.streamId,
+      offset: args.offset ?? this.offset,
+      lengthMode: args.lengthMode ?? this.lengthMode,
+      dataLength: args.dataLength ?? this.dataLength,
     });
   }
   clone(): VGMStartStreamCommand {
@@ -1135,19 +1191,23 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
       if (obj.streamId == null || obj.offset == null || obj.lengthMode == null || obj.dataLength == null) {
         throw new Error(`Can't create VGMStartStreamCommand: required parameter is missing.`);
       }
-      return new VGMStartStreamCommand(obj as any);
+      return new VGMStartStreamCommand(obj as VGMStartStreamCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMStopStreamCommandArgs = {
+  streamId: number;
+};
+
 export class VGMStopStreamCommand extends VGMStreamCommand {
-  constructor(arg: { streamId: number }) {
-    super(0x94, arg.streamId);
+  constructor(args: VGMStopStreamCommandArgs) {
+    super(0x94, args.streamId);
   }
-  copy(arg: { streamId?: number }): VGMStopStreamCommand {
+  copy(args: Partial<VGMStopStreamCommandArgs>): VGMStopStreamCommand {
     return new VGMStopStreamCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
+      streamId: args.streamId ?? this.streamId,
     });
   }
   clone(): VGMStopStreamCommand {
@@ -1182,25 +1242,31 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
       if (obj.streamId == null) {
         throw new Error(`Can't create VGMStopStreamCommand: required parameter is missing.`);
       }
-      return new VGMStopStreamCommand(obj as any);
+      return new VGMStopStreamCommand(obj as VGMStopStreamCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMStartStreamFastCommandArgs = {
+  streamId: number;
+  blockId: number;
+  flags: number;
+};
+
 export class VGMStartStreamFastCommand extends VGMStreamCommand {
   blockId: number;
   flags: number;
-  constructor(arg: { streamId: number; blockId: number; flags: number }) {
-    super(0x95, arg.streamId);
-    this.blockId = arg.blockId;
-    this.flags = arg.flags;
+  constructor(args: VGMStartStreamFastCommandArgs) {
+    super(0x95, args.streamId);
+    this.blockId = args.blockId;
+    this.flags = args.flags;
   }
-  copy(arg: { streamId?: number; blockId?: number; flags?: number }): VGMStartStreamFastCommand {
+  copy(args: Partial<VGMStartStreamFastCommandArgs>): VGMStartStreamFastCommand {
     return new VGMStartStreamFastCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      blockId: arg.blockId != null ? arg.blockId : this.blockId,
-      flags: arg.flags != null ? arg.flags : this.flags,
+      streamId: args.streamId ?? this.streamId,
+      blockId: args.blockId ?? this.blockId,
+      flags: args.flags ?? this.flags,
     });
   }
   clone(): VGMStartStreamFastCommand {
@@ -1243,20 +1309,24 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
       if (obj.streamId == null || obj.blockId == null || obj.flags == null) {
         throw new Error(`Can't create VGMStartStreamFastCommand: required parameter is missing.`);
       }
-      return new VGMStartStreamFastCommand(obj as any);
+      return new VGMStartStreamFastCommand(obj as VGMStartStreamFastCommandArgs);
     }
     return null;
   }
 }
 
+export type VGMSeekPCMCommandArgs = {
+  offset: number;
+};
+
 export class VGMSeekPCMCommand extends VGMCommand {
   offset: number;
-  constructor(arg: { offset: number }) {
+  constructor(args: VGMSeekPCMCommandArgs) {
     super(0xe0);
-    this.offset = arg.offset;
+    this.offset = args.offset;
   }
-  copy(arg: { offset?: number }): VGMSeekPCMCommand {
-    return new VGMSeekPCMCommand({ offset: arg.offset != null ? arg.offset : this.offset });
+  copy(args: Partial<VGMSeekPCMCommandArgs>): VGMSeekPCMCommand {
+    return new VGMSeekPCMCommand({ offset: args.offset ?? this.offset });
   }
   clone(): VGMSeekPCMCommand {
     return this.copy({});
@@ -1291,7 +1361,7 @@ export class VGMSeekPCMCommand extends VGMCommand {
       if (obj.offset == null) {
         throw new Error(`Can't create VGMSeekPCMCommand: required parameter is missing.`);
       }
-      return new VGMSeekPCMCommand(obj as any);
+      return new VGMSeekPCMCommand(obj as VGMSeekPCMCommandArgs);
     }
     return null;
   }

@@ -150,8 +150,8 @@ export function createEmptyGD3TagObject(): GD3TagObject {
       trackTitle: "",
       gameName: "",
       system: "",
-      composer: ""
-    }
+      composer: "",
+    },
   };
 }
 
@@ -214,7 +214,7 @@ export function deepCloneVGMObject(arg: VGMObject): VGMObject {
     volumeModifier: arg.volumeModifier,
     extraHeader: deepCloneExtraHeaderObject(arg.extraHeader),
     data: arg.data.slice(0),
-    gd3tag: deepCloneGD3TagObject(arg.gd3tag)
+    gd3tag: deepCloneGD3TagObject(arg.gd3tag),
   };
 }
 
@@ -223,18 +223,18 @@ export function createEmptyVGMObject(): VGMObject {
     version: {
       code: 0x171,
       major: "1",
-      minor: "71"
+      minor: "71",
     },
     offsets: {
       eof: 0,
       data: 0,
       loop: 0,
       gd3: 0,
-      extraHeader: 0
+      extraHeader: 0,
     },
     samples: {
       loop: 0,
-      total: 0
+      total: 0,
     },
     chips: {},
     rate: 60,
@@ -243,7 +243,7 @@ export function createEmptyVGMObject(): VGMObject {
     volumeModifier: 0,
     extraHeader: undefined,
     data: new ArrayBuffer(0),
-    gd3tag: undefined
+    gd3tag: undefined,
   };
   updateOffsets(obj);
   return obj;
