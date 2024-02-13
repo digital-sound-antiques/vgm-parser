@@ -11,7 +11,7 @@
   "scripts": {
     "test": "jest",
     "prepare": "npm run clean && npm run build",
-    "clean": "rm-cli -ss -r dist",
+    "clean": "rimraf dist",
     "build": "tsc",
     "build-demo": "webpack",
     "typedoc": "typedoc"
@@ -31,7 +31,7 @@
     "@types/node": "^18.0.0",
     "jest": "^29.0.3",
     "prettier": "^3.2.5",
-    "rm-cli": "^1.4.2",
+    "rimraf": "^5.0.5",
     "ts-jest": "^29.0.1",
     "typedoc": "^0.25.8",
     "typescript": "^5.3.3",
