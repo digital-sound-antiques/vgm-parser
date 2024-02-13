@@ -5,7 +5,7 @@ import {
   ExtraHeaderObject,
   ExtraChipClockObject,
   ExtraChipVolumeObject,
-  updateOffsets
+  updateOffsets,
 } from "./vgm_object";
 import { VGMCommand } from "./vgm_command";
 
@@ -337,7 +337,7 @@ function _writeExtraChipClocks(buf: AutoResizeBuffer, byteOffset: number, clocks
 function _writeExtraChipVolumes(
   buf: AutoResizeBuffer,
   byteOffset: number,
-  volumes: Array<ExtraChipVolumeObject>
+  volumes: Array<ExtraChipVolumeObject>,
 ): number {
   let wp = 0;
   buf.setUint8(byteOffset + wp, volumes.length);
@@ -401,7 +401,7 @@ export function buildVGMData(commands: Array<VGMCommand>): ArrayBuffer {
 
 export function buildVGM(
   vgm: VGMObject,
-  opts: { allowInconsistentOffsets?: boolean; compress?: boolean } = {}
+  opts: { allowInconsistentOffsets?: boolean; compress?: boolean } = {},
 ): ArrayBuffer {
   if (!opts.allowInconsistentOffsets) {
     updateOffsets(vgm);

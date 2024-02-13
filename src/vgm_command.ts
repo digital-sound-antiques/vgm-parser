@@ -298,7 +298,7 @@ export class VGMDataBlockCommand extends VGMCommand {
     return new VGMDataBlockCommand({
       blockType: arg.blockType != null ? arg.blockType : this.blockType,
       blockSize: arg.blockSize != null ? arg.blockSize : this.blockSize,
-      blockData: arg.blockData != null ? arg.blockData.slice(0) : this.blockData.slice(0)
+      blockData: arg.blockData != null ? arg.blockData.slice(0) : this.blockData.slice(0),
     });
   }
 
@@ -346,7 +346,7 @@ export class VGMDataBlockCommand extends VGMCommand {
       size: this.size,
       blockType: this.blockType,
       blockSize: this.blockSize,
-      blockData: this.blockData.slice(0)
+      blockData: this.blockData.slice(0),
     };
   }
 
@@ -394,7 +394,7 @@ export class VGMEndCommand extends VGMCommand {
   toObject(): VGMCommandObject {
     return {
       cmd: this.cmd,
-      size: this.size
+      size: this.size,
     };
   }
 
@@ -423,7 +423,7 @@ export abstract class VGMWaitCommand extends VGMCommand {
     }
     if (this.count !== count) {
       throw new Error(
-        `Count ${count} is given for command 0x${cmd.toString(16)} but the count should be ${this.count}.`
+        `Count ${count} is given for command 0x${cmd.toString(16)} but the count should be ${this.count}.`,
       );
     }
   }
@@ -442,7 +442,7 @@ export abstract class VGMWaitCommand extends VGMCommand {
     return {
       cmd: this.cmd,
       size: this.size,
-      count: this.count
+      count: this.count,
     };
   }
 }
@@ -596,7 +596,7 @@ export class VGMWrite2ACommand extends VGMCommand {
     return {
       cmd: this.cmd,
       size: this.size,
-      count: this.count
+      count: this.count,
     };
   }
 
@@ -631,7 +631,7 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
       blockType: arg.blockType != null ? arg.blockType : this.blockType,
       readOffset: arg.readOffset != null ? arg.readOffset : this.readOffset,
       writeOffset: arg.writeOffset != null ? arg.writeOffset : this.writeOffset,
-      writeSize: arg.writeSize != null ? arg.writeSize : this.writeSize
+      writeSize: arg.writeSize != null ? arg.writeSize : this.writeSize,
     });
   }
 
@@ -671,7 +671,7 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
       blockType: this.blockType,
       readOffset: this.readOffset,
       writeOffset: this.writeOffset,
-      writeSize: this.writeSize
+      writeSize: this.writeSize,
     };
   }
 
@@ -723,7 +723,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       index: arg.index != null ? arg.index : this.index,
       port: arg.port != null ? arg.port : this.port,
       addr: arg.addr != null ? arg.addr : this.addr,
-      data: arg.data != null ? arg.data : this.data
+      data: arg.data != null ? arg.data : this.data,
     });
   }
 
@@ -850,7 +850,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       index: this.index,
       port: this.port,
       addr: this.addr,
-      data: this.data
+      data: this.data,
     };
   }
 
@@ -895,7 +895,7 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
       streamId: arg.streamId != null ? arg.streamId : this.streamId,
       type: arg.type != null ? arg.type : this.type,
       port: arg.port != null ? arg.port : this.port,
-      channel: arg.channel != null ? arg.channel : this.channel
+      channel: arg.channel != null ? arg.channel : this.channel,
     });
   }
 
@@ -922,7 +922,7 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
         streamId: buf[offset + 1],
         type: buf[offset + 2],
         port: buf[offset + 3],
-        channel: buf[offset + 4]
+        channel: buf[offset + 4],
       });
     }
     return null;
@@ -934,7 +934,7 @@ export class VGMSetupStreamCommand extends VGMStreamCommand {
       streamId: this.streamId,
       type: this.type,
       port: this.port,
-      channel: this.channel
+      channel: this.channel,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMSetupStreamCommand | null {
@@ -965,7 +965,7 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
       streamId: arg.streamId != null ? arg.streamId : this.streamId,
       dataBankId: arg.dataBankId != null ? arg.dataBankId : this.dataBankId,
       stepSize: arg.stepSize != null ? arg.stepSize : this.stepSize,
-      stepBase: arg.stepBase != null ? arg.stepBase : this.stepBase
+      stepBase: arg.stepBase != null ? arg.stepBase : this.stepBase,
     });
   }
 
@@ -992,7 +992,7 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
         streamId: buf[offset + 1],
         dataBankId: buf[offset + 2],
         stepSize: buf[offset + 3],
-        stepBase: buf[offset + 4]
+        stepBase: buf[offset + 4],
       });
     }
     return null;
@@ -1004,7 +1004,7 @@ export class VGMSetStreamDataCommand extends VGMStreamCommand {
       streamId: this.streamId,
       dataBankId: this.dataBankId,
       stepBase: this.stepBase,
-      stepSize: this.stepSize
+      stepSize: this.stepSize,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMSetStreamDataCommand | null {
@@ -1028,7 +1028,7 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
   copy(arg: { streamId?: number; frequency?: number }): VGMSetStreamFrequencyCommand {
     return new VGMSetStreamFrequencyCommand({
       streamId: arg.streamId != null ? arg.streamId : this.streamId,
-      frequency: arg.frequency != null ? arg.frequency : this.frequency
+      frequency: arg.frequency != null ? arg.frequency : this.frequency,
     });
   }
   clone(): VGMSetStreamFrequencyCommand {
@@ -1049,7 +1049,7 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
     if (cmd === 0x92) {
       return new VGMSetStreamFrequencyCommand({
         streamId: buf[offset + 1],
-        frequency: getUint32LE(buf, offset + 2)
+        frequency: getUint32LE(buf, offset + 2),
       });
     }
     return null;
@@ -1059,7 +1059,7 @@ export class VGMSetStreamFrequencyCommand extends VGMStreamCommand {
       cmd: this.cmd,
       size: this.size,
       streamId: this.streamId,
-      frequency: this.frequency
+      frequency: this.frequency,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMSetStreamFrequencyCommand | null {
@@ -1089,7 +1089,7 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
       streamId: arg.streamId != null ? arg.streamId : this.streamId,
       offset: arg.offset != null ? arg.offset : this.offset,
       lengthMode: arg.lengthMode != null ? arg.lengthMode : this.lengthMode,
-      dataLength: arg.dataLength != null ? arg.dataLength : this.dataLength
+      dataLength: arg.dataLength != null ? arg.dataLength : this.dataLength,
     });
   }
   clone(): VGMStartStreamCommand {
@@ -1114,7 +1114,7 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
         streamId: buf[offset + 1],
         offset: getUint32LE(buf, offset + 2),
         lengthMode: buf[offset + 6],
-        dataLength: getUint32LE(buf, offset + 7)
+        dataLength: getUint32LE(buf, offset + 7),
       });
     }
     return null;
@@ -1126,7 +1126,7 @@ export class VGMStartStreamCommand extends VGMStreamCommand {
       streamId: this.streamId,
       offset: this.offset,
       lengthMode: this.lengthMode,
-      dataLength: this.dataLength
+      dataLength: this.dataLength,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMStartStreamCommand | null {
@@ -1147,7 +1147,7 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
   }
   copy(arg: { streamId?: number }): VGMStopStreamCommand {
     return new VGMStopStreamCommand({
-      streamId: arg.streamId != null ? arg.streamId : this.streamId
+      streamId: arg.streamId != null ? arg.streamId : this.streamId,
     });
   }
   clone(): VGMStopStreamCommand {
@@ -1173,7 +1173,7 @@ export class VGMStopStreamCommand extends VGMStreamCommand {
     return {
       cmd: this.cmd,
       size: this.size,
-      streamId: this.streamId
+      streamId: this.streamId,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMStopStreamCommand | null {
@@ -1200,7 +1200,7 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
     return new VGMStartStreamFastCommand({
       streamId: arg.streamId != null ? arg.streamId : this.streamId,
       blockId: arg.blockId != null ? arg.blockId : this.blockId,
-      flags: arg.flags != null ? arg.flags : this.flags
+      flags: arg.flags != null ? arg.flags : this.flags,
     });
   }
   clone(): VGMStartStreamFastCommand {
@@ -1223,7 +1223,7 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
       return new VGMStartStreamFastCommand({
         streamId: buf[offset + 1],
         blockId: getUint16LE(buf, offset + 2),
-        flags: buf[offset + 4]
+        flags: buf[offset + 4],
       });
     }
     return null;
@@ -1234,7 +1234,7 @@ export class VGMStartStreamFastCommand extends VGMStreamCommand {
       size: this.size,
       streamId: this.streamId,
       blockId: this.blockId,
-      flags: this.flags
+      flags: this.flags,
     };
   }
   static fromObject(obj: VGMCommandObject): VGMStartStreamFastCommand | null {
@@ -1281,7 +1281,7 @@ export class VGMSeekPCMCommand extends VGMCommand {
     return {
       cmd: this.cmd,
       size: this.size,
-      offset: this.offset
+      offset: this.offset,
     };
   }
 
@@ -1365,7 +1365,7 @@ export class VGMDataStream {
   }
 
   clone(): VGMDataStream {
-    const res = new VGMDataStream(this.commands.map(e => e.clone()));
+    const res = new VGMDataStream(this.commands.map((e) => e.clone()));
     res.byteLength = this.byteLength;
     res.totalSamples = this.totalSamples;
     res.loopSamples = this.loopSamples;
@@ -1435,7 +1435,7 @@ export class VGMDataStream {
       totalSamples,
       loopIndexOffset,
       loopByteOffset,
-      commands
+      commands,
     };
   }
 }

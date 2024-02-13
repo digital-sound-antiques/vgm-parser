@@ -15,7 +15,7 @@ import {
   VGMDataBlockCommand,
   VGMSeekPCMCommand,
   VGMWrite2ACommand,
-  VGMEndCommand
+  VGMEndCommand,
 } from "../index";
 
 test("VGMWriteDataCommand", () => {
@@ -78,7 +78,7 @@ test("VGMPCMRAMWriteCommand", () => {
   expect(cmd.size).toBe(12);
   expect(cmd.toObject()).toEqual({ cmd: 0x68, size: 12, ...obj });
   expect(cmd.toUint8Array()).toEqual(
-    new Uint8Array([0x68, 0x66, 0x20, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12])
+    new Uint8Array([0x68, 0x66, 0x20, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12]),
   );
 });
 
@@ -135,7 +135,7 @@ test("VGMStartStreamCommand", () => {
   expect(cmd.size).toBe(11);
   expect(cmd.toObject()).toEqual({ cmd: 0x93, size: 11, ...obj });
   expect(cmd.toUint8Array()).toEqual(
-    new Uint8Array([0x93, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00])
+    new Uint8Array([0x93, 0x01, 0x00, 0x01, 0x00, 0x00, 0x01, 0x00, 0x80, 0x00, 0x00]),
   );
 });
 
@@ -160,7 +160,7 @@ test("VGMStartStreamFastCommand", () => {
 test("parseVGMCommand", () => {
   expect(() => {
     parseVGMCommand([0], 0);
-  }).toThrowError("Parse Error");
+  }).toThrow("Parse Error");
   expect(parseVGMCommand([0x4f, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
   expect(parseVGMCommand([0x50, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
   expect(parseVGMCommand([0x51, 0, 0], 0)).toBeInstanceOf(VGMWriteDataCommand);
@@ -172,15 +172,15 @@ test("parseVGMCommand", () => {
   expect(parseVGMCommand([0x91, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(VGMSetStreamDataCommand);
   expect(parseVGMCommand([0x92, 0x00, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(VGMSetStreamFrequencyCommand);
   expect(parseVGMCommand([0x93, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(
-    VGMStartStreamCommand
+    VGMStartStreamCommand,
   );
   expect(parseVGMCommand([0x94, 0x00], 0)).toBeInstanceOf(VGMStopStreamCommand);
   expect(parseVGMCommand([0x95, 0x00, 0x00, 0x00, 0x00], 0)).toBeInstanceOf(VGMStartStreamFastCommand);
   expect(parseVGMCommand([0x68, 0x66, 0x20, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12, 0x56, 0x34, 0x12], 0)).toBeInstanceOf(
-    VGMPCMRAMWriteCommand
+    VGMPCMRAMWriteCommand,
   );
   expect(parseVGMCommand([0x67, 0x66, 0x20, 0x05, 0x00, 0x00, 0x00, 1, 2, 3, 4, 5], 0)).toBeInstanceOf(
-    VGMDataBlockCommand
+    VGMDataBlockCommand,
   );
   expect(parseVGMCommand([0xe0, 0x78, 0x56, 0x34, 0x12], 0)).toBeInstanceOf(VGMSeekPCMCommand);
   expect(parseVGMCommand([0x82], 0)).toBeInstanceOf(VGMWrite2ACommand);

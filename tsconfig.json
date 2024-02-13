@@ -1,15 +1,16 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    /* ES2022 for Node >=18. See: https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping  */
+    "target": "ES2022",
+    "module": "node16",
+    "lib": ["ES2022"],
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
     "strict": true,
-    "esModuleInterop": true
+    "skipLibCheck": true
   },
-  "exclude": [
-    "dist",
-    "src/__tests__/*"
-  ]
+  "exclude": ["dist", "src/__tests__/*"]
 }
