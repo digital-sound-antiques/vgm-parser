@@ -1,3 +1,8 @@
+# v0.10.0
+- Changed gzip library from zlibjs to fflate.
+- Upgraded npm dependencies.
+- Changed minimum node requirement version to 18.
+
 # v0.9.5
 - Prevent crashes when GD3 tag is malformed.
 
