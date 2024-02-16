@@ -16,15 +16,16 @@ import {
   VGMSeekPCMCommand,
   VGMWrite2ACommand,
   VGMEndCommand,
+  VGMWriteDataTargetId,
 } from "../index";
 
 test("VGMWriteDataCommand", () => {
-  const cmd = new VGMWriteDataCommand({ cmd: 0x51, addr: 16, data: 172 });
+  const cmd = new VGMWriteDataCommand({ targetId: VGMWriteDataTargetId.ym2413, addr: 16, data: 172 });
   expect(cmd.size).toBe(3);
   expect(cmd.toObject()).toEqual({ chip: "ym2413", cmd: 0x51, index: 0, port: 0, addr: 16, data: 172, size: 3 });
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x51, 16, 172]));
 
-  const cpy = cmd.copy({ cmd: 0xa1, data: 182 });
+  const cpy = cmd.copy({ targetId: VGMWriteDataTargetId.ym2413_2, data: 182 });
   expect(cpy.toUint8Array()).toEqual(new Uint8Array([0xa1, 16, 182]));
 });
 

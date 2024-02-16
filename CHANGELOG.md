@@ -1,7 +1,10 @@
+# v0.11.0
+- Add `VGMWriteDataTargetId` that indicates the target device for data writes.
+ 
 # v0.10.0
-- Changed gzip library from zlibjs to fflate.
-- Upgraded npm dependencies.
-- Changed minimum node requirement version to 18.
+- Change gzip library from zlibjs to fflate.
+- Upgrade npm dependencies.
+- Change minimum node requirement version to 18.
 
 # v0.9.5
 - Prevent crashes when GD3 tag is malformed.
