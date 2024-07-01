@@ -782,7 +782,8 @@ export class VGMPCMRAMWriteCommand extends VGMCommand {
 }
 
 export type VGMWriteDataCommandArgs = {
-  targetId: VGMWriteDataTargetId;
+  target?: VGMWriteDataTargetId;
+  cmd?: VGMWriteDataTargetId;
   index?: number | null;
   port?: number | null;
   addr?: number | null;
@@ -797,8 +798,12 @@ export class VGMWriteDataCommand extends VGMCommand {
   data: number;
   size: number;
   constructor(args: VGMWriteDataCommandArgs) {
-    super(args.targetId);
-    this.chip = dataTargetIdToChipName(args.targetId);
+    const cmd = args.target ?? args.cmd;
+    if (cmd == null) {
+      throw new Error("Either the `target` or `cmd` must be non-null.");
+    }
+    super(cmd);
+    this.chip = dataTargetIdToChipName(cmd);
     this.index = args.index ?? 0;
     this.port = args.port ?? 0;
     this.addr = args.addr ?? 0;
@@ -822,7 +827,8 @@ export class VGMWriteDataCommand extends VGMCommand {
 
   copy(args: Partial<VGMWriteDataCommandArgs>): VGMWriteDataCommand {
     return new VGMWriteDataCommand({
-      targetId: args.targetId ?? (this.cmd as VGMWriteDataTargetId),
+      target: args.target ?? (this.cmd as VGMWriteDataTargetId),
+      cmd: args.cmd ?? (this.cmd as VGMWriteDataTargetId),
       index: args.index ?? this.index,
       port: args.port ?? this.port,
       addr: args.addr ?? this.addr,
@@ -886,24 +892,24 @@ export class VGMWriteDataCommand extends VGMCommand {
     const cmd = buf[offset + 0];
     if (0x30 <= cmd && cmd <= 0x3f) {
       // 0x30: 2nd SN76489, 0x31-0x3e: Reserved, 0x3f: 2nd GG Sterao
-      return new VGMWriteDataCommand({ targetId: cmd as VGMWriteDataTargetId, index: 1, data: buf[offset + 1] });
+      return new VGMWriteDataCommand({ target: cmd as VGMWriteDataTargetId, index: 1, data: buf[offset + 1] });
     } else if (cmd === 0x4f) {
       // 1st GG Stereo
-      return new VGMWriteDataCommand({ targetId: cmd, index: 0, data: buf[offset + 1] });
+      return new VGMWriteDataCommand({ target: cmd, index: 0, data: buf[offset + 1] });
     } else if (cmd === 0x50) {
       // 1st SN76489
-      return new VGMWriteDataCommand({ targetId: cmd, index: 0, data: buf[offset + 1] });
+      return new VGMWriteDataCommand({ target: cmd, index: 0, data: buf[offset + 1] });
     } else if (cmd === 0xa0) {
       // AY-3-8910
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ targetId: cmd, index, port: 0, addr: addr & 0x7f, data: buf[offset + 2] });
+      return new VGMWriteDataCommand({ target: cmd, index, port: 0, addr: addr & 0x7f, data: buf[offset + 2] });
     } else if ((0x51 <= cmd && cmd <= 0x5f) || (0xa1 <= cmd && cmd <= 0xaf)) {
       const index = (cmd & 0xf0) === 0x50 ? 0 : 1;
       const dev = cmd & 0xf;
       const port = dev === 0x3 || dev === 0x7 || dev === 0x9 || dev === 0xf ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         port,
         addr: buf[offset + 1],
@@ -913,7 +919,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         addr: addr & 0x7f,
         data: buf[offset + 2],
@@ -922,7 +928,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       const addr = getUint16LE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         addr: addr & 0x7fff,
         data: buf[offset + 3],
@@ -930,14 +936,14 @@ export class VGMWriteDataCommand extends VGMCommand {
     } else if (0xc3 === cmd) {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ targetId: cmd, index, addr: addr & 0x7f, data: getUint16LE(buf, offset + 2) });
+      return new VGMWriteDataCommand({ target: cmd, index, addr: addr & 0x7f, data: getUint16LE(buf, offset + 2) });
     } else if (0xc4 === cmd) {
-      return new VGMWriteDataCommand({ targetId: cmd, index: 0, addr: buf[3], data: getUint16BE(buf, offset + 1) });
+      return new VGMWriteDataCommand({ target: cmd, index: 0, addr: buf[3], data: getUint16BE(buf, offset + 1) });
     } else if (0xc5 <= cmd && cmd <= 0xc8) {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         addr: addr & 0x7fff,
         data: buf[offset + 3],
@@ -946,7 +952,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       const port = buf[offset + 1] & 0x7f;
       const index = buf[offset + 1] & 0x80 ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         port,
         addr: buf[offset + 2],
@@ -956,7 +962,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
       return new VGMWriteDataCommand({
-        targetId: cmd as VGMWriteDataTargetId,
+        target: cmd as VGMWriteDataTargetId,
         index,
         addr: addr & 0x7fff,
         data: buf[offset + 3],
@@ -964,11 +970,11 @@ export class VGMWriteDataCommand extends VGMCommand {
     } else if (cmd === 0xd6) {
       const addr = buf[offset + 1];
       const index = addr & 0x80 ? 1 : 0;
-      return new VGMWriteDataCommand({ targetId: cmd, index, addr: addr & 0x7f, data: getUint16BE(buf, offset + 3) });
+      return new VGMWriteDataCommand({ target: cmd, index, addr: addr & 0x7f, data: getUint16BE(buf, offset + 3) });
     } else if (cmd === 0xe1) {
       const addr = getUint16BE(buf, offset + 1);
       const index = addr & 0x8000 ? 1 : 0;
-      return new VGMWriteDataCommand({ targetId: cmd, index, addr: addr & 0x7fff, data: getUint16BE(buf, offset + 3) });
+      return new VGMWriteDataCommand({ target: cmd, index, addr: addr & 0x7fff, data: getUint16BE(buf, offset + 3) });
     }
     return null;
   }
@@ -997,7 +1003,7 @@ export class VGMWriteDataCommand extends VGMCommand {
       cmd === 0xe1
     ) {
       return new VGMWriteDataCommand({
-        targetId: obj.cmd as VGMWriteDataTargetId,
+        target: obj.cmd as VGMWriteDataTargetId,
         index: obj.index,
         port: obj.port,
         addr: obj.addr,

@@ -13,6 +13,14 @@ import {
   ExtraChipClockObject,
   ExtraChipVolumeObject,
   chipIdToName,
+  ChipClockObject,
+  C140VariantName,
+  AY8910VariantName,
+  ES5506VariantName,
+  YM2610VariantName,
+  YM2612VariantName,
+  YM2151VariantName,
+  YM2413VariantName,
 } from "./vgm_object";
 
 import { gunzipSync } from "fflate";
@@ -30,19 +38,32 @@ function _decodeAsUtf16(buf: Uint8Array) {
 }
 
 /** @hidden */
-function getParamsCommon(d: DataView, clockIndex: number) {
+function getParamsCommon(d: DataView, clockIndex: number): (ChipClockObject & { bit31: boolean }) | undefined {
   const clock = d.getUint32(clockIndex, true);
   if (clock) {
-    return { clock: clock & 0x3fffffff, dual: clock & 0x40000000 ? true : false };
+    return {
+      clock: clock & 0x3fffffff,
+      dual: clock & 0x40000000 ? true : false,
+      bit31: clock & 0x80000000 ? true : false,
+    };
   }
   return undefined;
 }
 
 /** @hidden */
-function getParamsCommonWithFlags(d: DataView, clockIndex: number, flagsIndex: number) {
+function getParamsCommonWithFlags(
+  d: DataView,
+  clockIndex: number,
+  flagsIndex: number,
+): (ChipClockObject & { bit31: boolean }) | undefined {
   const clock = d.getUint32(clockIndex, true);
   if (clock) {
-    return { clock: clock & 0x3fffffff, dual: clock & 0x40000000 ? true : false, flags: d.getUint8(flagsIndex) };
+    return {
+      clock: clock & 0x3fffffff,
+      dual: clock & 0x40000000 ? true : false,
+      bit31: clock & 0x80000000 ? true : false,
+      flags: d.getUint8(flagsIndex),
+    };
   }
   return undefined;
 }
@@ -63,6 +84,21 @@ function getParamsSn76489(d: DataView) {
 }
 
 /** @hidden */
+function getParamsYm2413(d: DataView): ChipClockObject<YM2413VariantName> | undefined {
+  const obj = getParamsCommon(d, 0x10);
+  if (obj) {
+    return {
+      ...obj,
+      chipType: {
+        value: obj.bit31 ? 1 : 0,
+        name: obj.bit31 ? "vrc7" : "ym2413",
+      },
+    };
+  }
+  return undefined;
+}
+
+/** @hidden */
 function getParamsSegaPcm(d: DataView) {
   const obj = getParamsCommon(d, 0x38);
   if (obj) {
@@ -75,16 +111,15 @@ function getParamsSegaPcm(d: DataView) {
 }
 
 /** @hidden */
-function getParamsYm2151(d: DataView) {
+function getParamsYm2151(d: DataView): ChipClockObject<YM2151VariantName> | undefined {
   const obj = getParamsCommon(d, 0x30);
   if (obj) {
-    const t = obj.clock >> 30;
     return {
       ...obj,
       clock: obj.clock & 0x7fffffff,
       chipType: {
-        value: t,
-        name: t ? "YM2164" : "YM2151",
+        value: obj.bit31 ? 1 : 0,
+        name: obj.bit31 ? "ym2164" : "ym2151",
       },
     };
   }
@@ -116,16 +151,15 @@ function getParamsYm2608(d: DataView) {
 }
 
 /** @hidden */
-function getParamsYm2610(d: DataView) {
+function getParamsYm2610(d: DataView): ChipClockObject<YM2610VariantName> | undefined {
   const obj = getParamsCommon(d, 0x4c);
   if (obj) {
-    const t = d.getUint8(0x4c);
     return {
       ...obj,
       clock: obj.clock & 0x7fffffff,
       chipType: {
-        value: t,
-        name: t ? "YM2610" : "YM2610B",
+        value: obj.bit31 ? 1 : 0,
+        name: obj.bit31 ? "ym2610" : "ym2610b",
       },
     };
   }
@@ -133,16 +167,15 @@ function getParamsYm2610(d: DataView) {
 }
 
 /** @hidden */
-function getParamsYm2612(d: DataView) {
+function getParamsYm2612(d: DataView): ChipClockObject<YM2612VariantName> | undefined {
   const obj = getParamsCommon(d, 0x2c);
   if (obj) {
-    const t = obj.clock >> 30;
     return {
       ...obj,
       clock: obj.clock & 0x7fffffff,
       chipType: {
-        value: t,
-        name: t ? "YM3438" : "YM2612",
+        value: obj.bit31 ? 1 : 0,
+        name: obj.bit31 ? "ym3438" : "ym2612",
       },
     };
   }
@@ -174,16 +207,15 @@ function getParamsEs5503(d: DataView) {
 }
 
 /** @hidden */
-function getParamsEs5506(d: DataView) {
+function getParamsEs5506(d: DataView): (ChipClockObject<ES5506VariantName> & { numberOfChannels: number }) | undefined {
   const obj = getParamsCommon(d, 0xd0);
   if (obj) {
-    const t = obj.clock >> 30;
     return {
       ...obj,
       clock: obj.clock & 0x7fffffff,
       chipType: {
-        value: t,
-        name: t ? "ES5506" : "ES5505",
+        value: obj.bit31 ? 1 : 0,
+        name: obj.bit31 ? "es5506" : "es5505",
       },
       numberOfChannels: d.getUint8(0xd5),
     };
@@ -192,7 +224,7 @@ function getParamsEs5506(d: DataView) {
 }
 
 /** @hidden */
-function getParamsAy8910(d: DataView) {
+function getParamsAy8910(d: DataView): ChipClockObject<AY8910VariantName> | undefined {
   const obj = getParamsCommon(d, 0x74);
   if (obj) {
     const t = d.getUint8(0x78);
@@ -204,23 +236,23 @@ function getParamsAy8910(d: DataView) {
         name: ((t: number) => {
           switch (t) {
             case 0x00:
-              return "AY8910";
+              return "ay8910";
             case 0x01:
-              return "AY8912";
+              return "ay8912";
             case 0x02:
-              return "AY8913";
+              return "ay8913";
             case 0x03:
-              return "AY8930";
+              return "ay8930";
             case 0x10:
-              return "YM2149";
+              return "ym2149";
             case 0x11:
-              return "YM3439";
+              return "ym3439";
             case 0x12:
-              return "YMZ284";
+              return "ymz284";
             case 0x13:
-              return "YMZ294";
+              return "ymz294";
             default:
-              return "UNKNOWN";
+              return "unknown";
           }
         })(t),
       },
@@ -231,7 +263,7 @@ function getParamsAy8910(d: DataView) {
 }
 
 /** @hidden */
-function getParamsC140(d: DataView) {
+function getParamsC140(d: DataView): ChipClockObject<C140VariantName> | undefined {
   const obj = getParamsCommon(d, 0xa8);
   if (obj) {
     const t = d.getUint8(0x96);
@@ -242,13 +274,13 @@ function getParamsC140(d: DataView) {
         name: ((t: number) => {
           switch (t) {
             case 0x00:
-              return "C140, Namco System 2";
+              return "c140"; // "C140, Namco System 2";
             case 0x01:
-              return "C140, Namco System 21";
+              return "c140_system_21"; //  "C140 Namco System 21";
             case 0x02:
-              return "219 ASIC, Namco NA-1/2";
+              return "asic_219"; // "219 ASIC, Namco Na-1/2";
             default:
-              return "UNKNOWN";
+              return "unknown";
           }
         })(t),
       },
@@ -396,7 +428,7 @@ export function parseVGM(input: ArrayBuffer): VGMObject {
   const version = d.getUint32(0x08, true);
   const chips: ChipsObject = {
     sn76489: getParamsSn76489(d),
-    ym2413: getParamsCommon(d, 0x10),
+    ym2413: getParamsYm2413(d),
   };
 
   const eof = d.getUint32(0x04, true);

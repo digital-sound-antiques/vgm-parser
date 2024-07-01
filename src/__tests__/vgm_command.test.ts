@@ -20,12 +20,13 @@ import {
 } from "../index";
 
 test("VGMWriteDataCommand", () => {
-  const cmd = new VGMWriteDataCommand({ targetId: VGMWriteDataTargetId.ym2413, addr: 16, data: 172 });
+  const { ym2413, ym2413_2 } = VGMWriteDataTargetId;
+  const cmd = new VGMWriteDataCommand({ target: ym2413, addr: 16, data: 172 });
   expect(cmd.size).toBe(3);
   expect(cmd.toObject()).toEqual({ chip: "ym2413", cmd: 0x51, index: 0, port: 0, addr: 16, data: 172, size: 3 });
   expect(cmd.toUint8Array()).toEqual(new Uint8Array([0x51, 16, 172]));
 
-  const cpy = cmd.copy({ targetId: VGMWriteDataTargetId.ym2413_2, data: 182 });
+  const cpy = cmd.copy({ target: ym2413_2, data: 182 });
   expect(cpy.toUint8Array()).toEqual(new Uint8Array([0xa1, 16, 182]));
 });
 

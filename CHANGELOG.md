@@ -1,5 +1,10 @@
+# v0.12.0
+- Renamed the `targetId` parameter in the `VGMWriteDataCommand` constructor arguments to `target`　to reduce naming redundancy.
+- Added the `cmd` parameter as an alias for the `targetId` in the `VGMWriteDataCommand` constructor arguments for backward compatibility.
+- Supported VRC7, a variant of YM2413.
+
 # v0.11.0
-- Add `VGMWriteDataTargetId` that indicates the target device for data writes.
+- Added `VGMWriteDataTargetId` that indicates the target device for data writes.
  
 # v0.10.0
 - Change gzip library from zlibjs to fflate.

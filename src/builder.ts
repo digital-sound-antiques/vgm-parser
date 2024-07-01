@@ -168,7 +168,7 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
       buf.setUint32LE(0x48, _makeClock(vgm.chips.ym2608));
     }
     if (vgm.chips.ym2610) {
-      const chipType = vgm.chips.ym2610.chipType || { value: 0 };
+      const chipType = vgm.chips.ym2610.chipType ?? { value: 0 };
       buf.setUint32LE(0x4c, _makeClock(vgm.chips.ym2610) | (chipType.value ? 0x80000000 : 0));
     }
     if (vgm.chips.ym3812) {
@@ -200,15 +200,15 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
     }
     if (vgm.chips.ay8910) {
       buf.setUint32LE(0x74, _makeClock(vgm.chips.ay8910));
-      const chipType = vgm.chips.ay8910.chipType || { value: 0 };
+      const chipType = vgm.chips.ay8910.chipType ?? { value: 0 };
       buf.setUint8(0x78, chipType.value);
-      buf.setUint8(0x79, vgm.chips.ay8910.flags || 0);
+      buf.setUint8(0x79, vgm.chips.ay8910.flags ?? 0);
     }
     if (vgm.chips.ym2203) {
-      buf.setUint8(0x7a, vgm.chips.ym2203.ssgFlags || 0);
+      buf.setUint8(0x7a, vgm.chips.ym2203.ssgFlags ?? 0);
     }
     if (vgm.chips.ym2608) {
-      buf.setUint8(0x7b, vgm.chips.ym2608.ssgFlags || 0);
+      buf.setUint8(0x7b, vgm.chips.ym2608.ssgFlags ?? 0);
     }
 
     buf.setUint8(0x7f, vgm.loopModifier);
@@ -234,13 +234,13 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
     }
     if (vgm.chips.okim6258) {
       buf.setUint32LE(0x90, _makeClock(vgm.chips.okim6258));
-      buf.setUint8(0x94, vgm.chips.okim6258.flags || 0);
+      buf.setUint8(0x94, vgm.chips.okim6258.flags ?? 0);
     }
     if (vgm.chips.k054539) {
-      buf.setUint8(0x95, vgm.chips.k054539.flags || 0);
+      buf.setUint8(0x95, vgm.chips.k054539.flags ?? 0);
     }
     if (vgm.chips.c140) {
-      const chipType = vgm.chips.c140.chipType || { value: 0 };
+      const chipType = vgm.chips.c140.chipType ?? { value: 0 };
       buf.setUint8(0x96, chipType.value);
     }
     if (vgm.chips.okim6295) {
@@ -294,7 +294,7 @@ function _writeVGMHeader(buf: AutoResizeBuffer, vgm: VGMObject): number {
       buf.setUint32LE(0xcc, _makeClock(vgm.chips.es5503));
     }
     if (vgm.chips.es5506) {
-      const chipType = vgm.chips.es5506.chipType || { value: 0 };
+      const chipType = vgm.chips.es5506.chipType ?? { value: 0 };
       buf.setUint32LE(0xd0, _makeClock(vgm.chips.es5506) | (chipType.value ? 0x80000000 : 0));
     }
     if (vgm.chips.es5503) {

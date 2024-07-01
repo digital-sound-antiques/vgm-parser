@@ -4,24 +4,26 @@ import {
   VGMWriteDataCommand,
   VGMWaitNibbleCommand,
   VGMWaitWordCommand,
-  VGMEndCommand
+  VGMEndCommand,
+  VGMWriteDataTargetId,
 } from "../index";
 
 test("VGMDataStream.build", () => {
   const vgm = new VGM();
   vgm.chips.ym2413 = { clock: 3579545, dual: false };
   const stream = new VGMDataStream();
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 48, data: 16 }));
+  const { ym2413 } = VGMWriteDataTargetId;
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 48, data: 16 }));
   stream.markLoopPoint(); // mark here as loop point
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 16, data: 172 }));
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 32, data: 24 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 16, data: 172 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 32, data: 24 }));
   stream.push(new VGMWaitWordCommand({ count: 0xac44 }));
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 32, data: 8 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 32, data: 8 }));
   stream.push(new VGMWaitWordCommand({ count: 0x1588 }));
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 16, data: 182 }));
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 32, data: 24 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 16, data: 182 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 32, data: 24 }));
   stream.push(new VGMWaitWordCommand({ count: 0xac44 }));
-  stream.push(new VGMWriteDataCommand({ targetId: 0x51, addr: 32, data: 8 }));
+  stream.push(new VGMWriteDataCommand({ target: ym2413, addr: 32, data: 8 }));
   stream.push(new VGMWaitWordCommand({ count: 0x1588 }));
   stream.push(new VGMWaitNibbleCommand({ count: 16 }));
   stream.push(new VGMEndCommand());
@@ -44,6 +46,6 @@ test("VGMDataStream.build", () => {
       0x61, 0x88, 0x15,
       0x7f,
       0x66
-    ])
+    ]),
   );
 });

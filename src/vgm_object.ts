@@ -13,6 +13,24 @@ export type ChipName =
   | "c352" | "ga20"
   | "unknown";
 
+export type ChipOrVariantName =
+  | ChipName
+  | YM2413VariantName
+  | YM2151VariantName
+  | YM2610VariantName
+  | YM2612VariantName
+  | ES5506VariantName
+  | AY8910VariantName
+  | C140VariantName;
+
+export type YM2413VariantName = "ym2413" | "vrc7";
+export type YM2151VariantName = "ym2151" | "ym2164";
+export type YM2610VariantName = "ym2610" | "ym2610b";
+export type YM2612VariantName = "ym2612" | "ym3438";
+export type ES5506VariantName = "es5505" | "es5506";
+export type AY8910VariantName = "ay8910" | "ay8912" | "ay8913" | "ay8930" | "ym2149" | "ym3439" | "ymz284" | "ymz294" | "unknown";
+export type C140VariantName = "c140" | "c140_system_21" | "asic_219" | "unknown";
+
 // prettier-ignore
 const _chipIdToName: Array<ChipName> = [
   "sn76489", "ym2413", "ym2612", "ym2151", "segaPcm", "rf5c68", "ym2203", "ym2608", "ym2610",
@@ -26,32 +44,33 @@ export function chipIdToName(chipId: number): ChipName | undefined {
   return _chipIdToName[chipId];
 }
 
-export type ChipTypeObject = {
+export type ChipTypeObject<V extends string = string> = {
   value: number;
-  name: string;
+  name: V;
 };
 
-export type ChipClockObject = {
+export type ChipClockObject<V extends string = string> = {
   clock: number;
   dual?: boolean;
+  flags?: number;
+  chipType?: ChipTypeObject<V>;
 };
 
 export type ChipsObject = {
   sn76489?: ChipClockObject & {
     feedback?: number;
     shiftRegisterWidth?: number;
-    flags?: number;
     t6w28?: boolean;
   };
   gameGearStereo?: null /* dummy */;
-  ym2413?: ChipClockObject;
-  ym2612?: ChipClockObject & { chipType?: ChipTypeObject };
-  ym2151?: ChipClockObject & { chipType?: ChipTypeObject };
+  ym2413?: ChipClockObject<YM2413VariantName>;
+  ym2612?: ChipClockObject<YM2612VariantName>;
+  ym2151?: ChipClockObject<YM2151VariantName>;
   segaPcm?: ChipClockObject & { interfaceRegister?: number };
   rf5c68?: ChipClockObject;
   ym2203?: ChipClockObject & { ssgFlags?: number };
   ym2608?: ChipClockObject & { ssgFlags?: number };
-  ym2610?: ChipClockObject & { chipType?: ChipTypeObject };
+  ym2610?: ChipClockObject<YM2610VariantName>;
   ym3812?: ChipClockObject;
   ym3526?: ChipClockObject;
   y8950?: ChipClockObject;
@@ -61,20 +80,17 @@ export type ChipsObject = {
   ymz280b?: ChipClockObject;
   rf5c164?: ChipClockObject;
   pwm?: ChipClockObject;
-  ay8910?: ChipClockObject & {
-    chipType?: ChipTypeObject;
-    flags?: number;
-  };
+  ay8910?: ChipClockObject<AY8910VariantName>;
   gameBoyDmg?: ChipClockObject;
   nesApu?: ChipClockObject & { fds?: boolean };
   multiPcm?: ChipClockObject;
   upd7759?: ChipClockObject;
-  okim6258?: ChipClockObject & { flags?: number };
+  okim6258?: ChipClockObject;
   okim6295?: ChipClockObject;
   k051649?: ChipClockObject;
-  k054539?: ChipClockObject & { flags?: number };
+  k054539?: ChipClockObject;
   huc6280?: ChipClockObject;
-  c140?: ChipClockObject & { chipType?: ChipTypeObject };
+  c140?: ChipClockObject<C140VariantName>;
   k053260?: ChipClockObject;
   pokey?: ChipClockObject;
   qsound?: ChipClockObject;
@@ -83,7 +99,7 @@ export type ChipsObject = {
   vsu?: ChipClockObject;
   saa1099?: ChipClockObject;
   es5503?: ChipClockObject & { numberOfChannels?: number };
-  es5506?: ChipClockObject & { chipType?: ChipTypeObject; numberOfChannels?: number };
+  es5506?: ChipClockObject<ES5506VariantName> & { numberOfChannels?: number };
   x1_010?: ChipClockObject;
   c352?: ChipClockObject & { clockDivider?: number };
   ga20?: ChipClockObject;
